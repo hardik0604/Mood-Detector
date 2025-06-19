@@ -27,7 +27,7 @@
             border-radius: 20px;
             padding: 40px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
             text-align: center;
         }
@@ -179,6 +179,83 @@
             font-weight: 700;
         }
 
+        /* New Music Recommendations Styles */
+        .music-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            display: none;
+        }
+
+        .music-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .mood-description {
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            text-align: center;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .song-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .song-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .song-title {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .song-artist {
+            font-size: 0.95em;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .song-genre {
+            font-size: 0.85em;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .dominant-emotion-badge {
+            background: linear-gradient(45deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 15px 0;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+
         .loading {
             display: none;
             margin: 20px 0;
@@ -224,6 +301,10 @@
             .emotions-grid {
                 grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             }
+
+            .songs-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -256,7 +337,7 @@
         <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Analyzing emotions...</p>
+            <p>Analyzing emotions and finding perfect songs...</p>
         </div>
 
         <!-- Error Message -->
@@ -268,199 +349,254 @@
             <div class="image-container" id="imageContainer"></div>
             <div class="emotions-grid" id="emotionsGrid"></div>
         </div>
+
+        <!-- Music Recommendations Section -->
+        <div class="music-section" id="musicSection">
+            <div class="music-title">🎵 Music Recommendations</div>
+            <div class="dominant-emotion-badge" id="dominantEmotionBadge"></div>
+            <div class="mood-description" id="moodDescription"></div>
+            <div class="songs-grid" id="songsGrid"></div>
+        </div>
+
+        <button id="reset" style="display: inline-block; background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 8px;">Reset</button>
     </div>
 
-    <script>
-        let webcamStream = null;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let webcamStream = null;
 
-        // File upload handling
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
 
-        uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('click', () => fileInput.click());
 
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFileUpload(files[0]);
-            }
-        });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileUpload(files[0]);
+        }
+    });
 
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileUpload(e.target.files[0]);
-            }
-        });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileUpload(e.target.files[0]);
+            fileInput.value = ''; // Reset input to prevent re-triggering
+        }
+    });
 
-        // Webcam handling
-        document.getElementById('startWebcam').addEventListener('click', startWebcam);
-        document.getElementById('capture').addEventListener('click', capturePhoto);
-        document.getElementById('stopWebcam').addEventListener('click', stopWebcam);
+    document.getElementById('startWebcam').addEventListener('click', startWebcam);
+    document.getElementById('capture').addEventListener('click', capturePhoto);
+    document.getElementById('stopWebcam').addEventListener('click', stopWebcam);
+    document.getElementById('reset').addEventListener('click', resetApp);
 
-        async function startWebcam() {
-            try {
-                webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                document.getElementById('webcam').srcObject = webcamStream;
-                document.getElementById('startWebcam').style.display = 'none';
-                document.getElementById('capture').style.display = 'inline-block';
-                document.getElementById('stopWebcam').style.display = 'inline-block';
-            } catch (error) {
-                showError('Could not access webcam: ' + error.message);
-            }
+    async function startWebcam() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showError("Your browser doesn't support accessing the webcam.");
+            return;
         }
 
-        function stopWebcam() {
-            if (webcamStream) {
-                webcamStream.getTracks().forEach(track => track.stop());
-                webcamStream = null;
-                document.getElementById('webcam').srcObject = null;
-                document.getElementById('startWebcam').style.display = 'inline-block';
-                document.getElementById('capture').style.display = 'none';
-                document.getElementById('stopWebcam').style.display = 'none';
-            }
+        try {
+            webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('webcam').srcObject = webcamStream;
+            document.getElementById('startWebcam').style.display = 'none';
+            document.getElementById('capture').style.display = 'inline-block';
+            document.getElementById('stopWebcam').style.display = 'inline-block';
+        } catch (error) {
+            showError('Could not access webcam: ' + error.message);
+        }
+    }
+
+    function stopWebcam() {
+        if (webcamStream) {
+            webcamStream.getTracks().forEach(track => track.stop());
+            webcamStream = null;
+            document.getElementById('webcam').srcObject = null;
         }
 
-        function capturePhoto() {
-            const video = document.getElementById('webcam');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
+        document.getElementById('startWebcam').style.display = 'inline-block';
+        document.getElementById('capture').style.display = 'none';
+        document.getElementById('stopWebcam').style.display = 'none';
+    }
 
-            const imageData = canvas.toDataURL('image/jpeg');
-            handleWebcamCapture(imageData);
-        }
+    function capturePhoto() {
+        const video = document.getElementById('webcam');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL('image/jpeg');
+        handleWebcamCapture(imageData);
+    }
 
-        function handleFileUpload(file) {
-            const formData = new FormData();
-            formData.append('file', file);
+    function handleFileUpload(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        showLoading(); hideError(); hideResults(); hideMusicSection();
 
-            showLoading();
-            hideError();
-            hideResults();
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                if (data.success) {
-                    showResults(data);
-                } else {
-                    showError(data.error);
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        }).then(response => response.json()).then(data => {
+            hideLoading();
+            if (data.success) {
+                showResults(data);
+                if (data.recommended_songs) {
+                    showMusicRecommendations(data);
                 }
-            })
-            .catch(error => {
-                hideLoading();
-                showError('Upload failed: ' + error.message);
+            } else {
+                showError(data.error);
+            }
+        }).catch(error => {
+            hideLoading();
+            showError('Upload failed: ' + error.message);
+        });
+    }
+
+    function handleWebcamCapture(imageData) {
+        showLoading(); hideError(); hideResults(); hideMusicSection();
+
+        fetch('/webcam', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageData })
+        }).then(response => response.json()).then(data => {
+            hideLoading();
+            if (data.success) {
+                showResults(data);
+                if (data.recommended_songs) {
+                    showMusicRecommendations(data);
+                }
+            } else {
+                showError(data.error);
+            }
+        }).catch(error => {
+            hideLoading();
+            showError('Capture failed: ' + error.message);
+        });
+    }
+
+    function showResults(data) {
+        const resultsSection = document.getElementById('results');
+        const imageContainer = document.getElementById('imageContainer');
+        const emotionsGrid = document.getElementById('emotionsGrid');
+
+        imageContainer.innerHTML = '';
+        emotionsGrid.innerHTML = '';
+
+        const imageBox = document.createElement('div');
+        imageBox.className = 'image-box';
+        imageBox.innerHTML = `
+            <div class="image-title">Processed Image</div>
+            <img src="${data.processed_image}" alt="Processed Image">
+        `;
+        imageContainer.appendChild(imageBox);
+
+        // Show only first face's emotions
+        if (data.emotions.length > 0) {
+            const emotions = data.emotions[0].emotions;
+            const dominantEmotion = Object.keys(emotions).reduce((a, b) =>
+                emotions[a] > emotions[b] ? a : b
+            );
+
+            Object.entries(emotions).forEach(([emotion, confidence]) => {
+                const card = document.createElement('div');
+                card.className = 'emotion-card';
+                if (emotion === dominantEmotion) {
+                    card.style.background = 'linear-gradient(45deg, #11998e 0%, #38ef7d 100%)';
+                }
+                card.innerHTML = `
+                    <div class="emotion-name">${emotion}</div>
+                    <div class="emotion-confidence">${(confidence * 100).toFixed(1)}%</div>
+                `;
+                emotionsGrid.appendChild(card);
             });
         }
 
-        function handleWebcamCapture(imageData) {
-            showLoading();
-            hideError();
-            hideResults();
+        resultsSection.style.display = 'block';
+    }
 
-            fetch('/webcam', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ image: imageData })
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                if (data.success) {
-                    showResults(data);
-                } else {
-                    showError(data.error);
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                showError('Capture failed: ' + error.message);
-            });
-        }
+    function showMusicRecommendations(data) {
+        const musicSection = document.getElementById('musicSection');
+        const dominantEmotionBadge = document.getElementById('dominantEmotionBadge');
+        const moodDescription = document.getElementById('moodDescription');
+        const songsGrid = document.getElementById('songsGrid');
 
-        function showResults(data) {
-            const resultsSection = document.getElementById('results');
-            const imageContainer = document.getElementById('imageContainer');
-            const emotionsGrid = document.getElementById('emotionsGrid');
+        // Clear previous content
+        songsGrid.innerHTML = '';
 
-            // Clear previous results
-            imageContainer.innerHTML = '';
-            emotionsGrid.innerHTML = '';
+        // Set dominant emotion and description
+        dominantEmotionBadge.textContent = `Detected Mood: ${data.dominant_emotion.charAt(0).toUpperCase() + data.dominant_emotion.slice(1)}`;
+        moodDescription.textContent = data.mood_description;
 
-            // Show processed image
-            const imageBox = document.createElement('div');
-            imageBox.className = 'image-box';
-            imageBox.innerHTML = `
-                <div class="image-title">Processed Image</div>
-                <img src="${data.processed_image}" alt="Processed Image">
+        // Add song cards
+        data.recommended_songs.forEach(song => {
+            const songCard = document.createElement('div');
+            songCard.className = 'song-card';
+            songCard.innerHTML = `
+                <div class="song-title">🎵 ${song.title}</div>
+                <div class="song-artist">👨‍🎤 ${song.artist}</div>
+                <div class="song-genre">${song.genre}</div>
             `;
-            imageContainer.appendChild(imageBox);
+            songsGrid.appendChild(songCard);
+        });
 
-            // Show emotions for each face
-            data.emotions.forEach((face, index) => {
-                const emotions = face.emotions;
-                const dominantEmotion = Object.keys(emotions).reduce((a, b) =>
-                    emotions[a] > emotions[b] ? a : b
-                );
+        musicSection.style.display = 'block';
+    }
 
-                // Create emotion cards
-                Object.entries(emotions).forEach(([emotion, confidence]) => {
-                    const emotionCard = document.createElement('div');
-                    emotionCard.className = 'emotion-card';
-                    if (emotion === dominantEmotion) {
-                        emotionCard.style.background = 'linear-gradient(45deg, #11998e 0%, #38ef7d 100%)';
-                    }
-                    emotionCard.innerHTML = `
-                        <div class="emotion-name">${emotion}</div>
-                        <div class="emotion-confidence">${(confidence * 100).toFixed(1)}%</div>
-                    `;
-                    emotionsGrid.appendChild(emotionCard);
-                });
-            });
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+    }
 
-            resultsSection.style.display = 'block';
-        }
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+    }
 
-        function showLoading() {
-            document.getElementById('loading').style.display = 'block';
-        }
+    function showError(message) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
 
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
+    function hideError() {
+        document.getElementById('error').style.display = 'none';
+    }
 
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-        }
+    function hideResults() {
+        document.getElementById('results').style.display = 'none';
+    }
 
-        function hideError() {
-            document.getElementById('error').style.display = 'none';
-        }
+    function hideMusicSection() {
+        document.getElementById('musicSection').style.display = 'none';
+    }
 
-        function hideResults() {
-            document.getElementById('results').style.display = 'none';
-        }
-    </script>
+    function resetApp() {
+        stopWebcam();
+        document.getElementById('fileInput').value = '';
+        document.getElementById('imageContainer').innerHTML = '';
+        document.getElementById('emotionsGrid').innerHTML = '';
+        document.getElementById('songsGrid').innerHTML = '';
+        hideResults();
+        hideMusicSection();
+        hideError();
+        hideLoading();
+        document.getElementById('startWebcam').style.display = 'inline-block';
+        document.getElementById('capture').style.display = 'none';
+        document.getElementById('stopWebcam').style.display = 'none';
+        document.getElementById('webcam').srcObject = null;
+    }
+});
+</script>
 </body>
 </html>
