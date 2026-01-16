@@ -1,7 +1,9 @@
 Flask==2.3.3
-fer==22.5.1
+deepface==0.0.97
+retina-face==0.0.17
 opencv-python==4.8.1.78
 tensorflow==2.13.0
 Pillow==10.2.0
 numpy==1.24.3
 moviepy==1.0.3
+tf-keras

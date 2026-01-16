@@ -2,11 +2,10 @@ from flask import Flask, request, render_template, jsonify, send_from_directory
 import os
 import cv2
 import numpy as np
-from fer import FER
+from deepface import DeepFace
 import base64
 import io
 from PIL import Image
-import json
 import random
 
 app = Flask(__name__)
@@ -19,9 +18,6 @@ os.makedirs(STATIC_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-
-# Initialize FER detector
-detector = FER(mtcnn=True)
 
 # Song recommendations database organized by emotion
 SONG_RECOMMENDATIONS = {
@@ -97,24 +93,14 @@ SONG_RECOMMENDATIONS = {
     ]
 }
 
-
-def allowed_file(filename):
-    """Check if file extension is allowed"""
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
 def get_song_recommendations(emotion, num_songs=5):
     """Get song recommendations based on detected emotion"""
     if emotion.lower() in SONG_RECOMMENDATIONS:
         songs = SONG_RECOMMENDATIONS[emotion.lower()]
-        # Return random selection of songs
         return random.sample(songs, min(num_songs, len(songs)))
     else:
-        # Default to neutral if emotion not found
-        songs = SONG_RECOMMENDATIONS['neutral']
+        songs = SONG_RECOMMENDATIONS.get('neutral', [])
         return random.sample(songs, min(num_songs, len(songs)))
-
 
 def get_mood_description(emotion):
     """Get a friendly description of the detected mood"""
@@ -129,37 +115,71 @@ def get_mood_description(emotion):
     }
     return descriptions.get(emotion.lower(), "Here are some songs that might match your current vibe.")
 
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def process_image(image_path):
-    """Process image and detect emotions"""
+    """Process image and detect emotions using DeepFace (with RGB fix)"""
     try:
         # Read image
         image = cv2.imread(image_path)
         if image is None:
             return None, "Could not read image file"
 
-        # Convert BGR to RGB
+        # CRITICAL: DeepFace expects RGB, but OpenCV uses BGR.
+        # Convert to RGB before passing to DeepFace to avoid "blue skin" accuracy issues.
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Detect emotions
-        result = detector.detect_emotions(image_rgb)
-
-        if not result:
+        try:
+            # Analyze using DeepFace
+            # actions=['emotion']
+            # detector_backend='retinaface' is much more accurate than opencv (fewer false positives).
+            # normalize_face=True (default) ensures face alignment which improves emotion accuracy.
+            results = DeepFace.analyze(img_path=image_rgb, 
+                                     actions=['emotion'], 
+                                     detector_backend='retinaface',
+                                     enforce_detection=True)
+        except ValueError:
             return None, "No faces detected in the image"
+        except Exception as e:
+            # DeepFace sometimes throws generic exceptions
+            return None, f"Error during analysis: {str(e)}"
+            
+        if not results:
+            return None, "No results returned"
+        
+        # DeepFace results might be a list or dict depending on version. 
+        # In recent versions (0.0.97+), it's a list of dicts.
+        if isinstance(results, dict):
+            results = [results]
 
-        # Draw bounding boxes and labels
-        for face in result:
-            (x, y, w, h) = face["box"]
-            emotions = face["emotions"]
+        formatted_results = []
 
-            # Find dominant emotion
-            dominant_emotion = max(emotions, key=emotions.get)
-            confidence = emotions[dominant_emotion]
+        for face in results:
+            # Extract data
+            region = face['region']
+            emotions = face['emotion']
+            dominant_emotion = face['dominant_emotion']
+            
+            # Normalize emotions (0-100 -> 0-1) for frontend compatibility
+            emotions_normalized = {k: v / 100.0 for k, v in emotions.items()}
+            
+            x, y, w, h = region['x'], region['y'], region['w'], region['h']
+            
+            # Format for frontend
+            formatted_face = {
+                "box": [x, y, w, h],
+                "emotions": emotions_normalized
+            }
+            formatted_results.append(formatted_face)
 
-            # Draw rectangle around face
+            # Draw rectangle around face (image is BGR, which is correct for OpenCV drawing)
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
             # Add emotion label
+            confidence = emotions_normalized[dominant_emotion]
             label = f"{dominant_emotion}: {confidence:.2f}"
             cv2.putText(image, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX,
                         0.8, (0, 255, 0), 2)
@@ -168,7 +188,7 @@ def process_image(image_path):
         output_path = os.path.join(app.config['UPLOAD_FOLDER'], 'processed_' + os.path.basename(image_path))
         cv2.imwrite(output_path, image)
 
-        return result, output_path
+        return formatted_results, output_path
 
     except Exception as e:
         return None, f"Error processing image: {str(e)}"
@@ -205,31 +225,29 @@ def upload_file():
         if emotions_data is None:
             return jsonify({'error': processed_path}), 400
 
-        # Get dominant emotion from first detected face
-        if emotions_data:
-            dominant_emotion = max(emotions_data[0]["emotions"], key=emotions_data[0]["emotions"].get)
+        # Enrichment with Songs
+        dominant_emotion = None
+        mood_description = ""
+        recommended_songs = []
 
-            # Get song recommendations
-            recommended_songs = get_song_recommendations(dominant_emotion)
+        if emotions_data and len(emotions_data) > 0:
+            # Find dominant in first face
+            first_face_emotions = emotions_data[0]['emotions']
+            dominant_emotion = max(first_face_emotions, key=first_face_emotions.get)
+            
             mood_description = get_mood_description(dominant_emotion)
+            recommended_songs = get_song_recommendations(dominant_emotion)
 
-            # Prepare response data
-            response_data = {
-                'success': True,
-                'original_image': f'/uploads/{filename}',
-                'processed_image': f'/uploads/{os.path.basename(processed_path)}',
-                'emotions': emotions_data,
-                'dominant_emotion': dominant_emotion,
-                'mood_description': mood_description,
-                'recommended_songs': recommended_songs
-            }
-        else:
-            response_data = {
-                'success': True,
-                'original_image': f'/uploads/{filename}',
-                'processed_image': f'/uploads/{os.path.basename(processed_path)}',
-                'emotions': emotions_data
-            }
+        # Prepare response data
+        response_data = {
+            'success': True,
+            'original_image': f'/uploads/{filename}',
+            'processed_image': f'/uploads/{os.path.basename(processed_path)}',
+            'emotions': emotions_data,
+            'dominant_emotion': dominant_emotion,
+            'mood_description': mood_description,
+            'recommended_songs': recommended_songs
+        }
 
         return jsonify(response_data)
 
@@ -259,28 +277,27 @@ def webcam_capture():
         if emotions_data is None:
             return jsonify({'error': processed_path}), 400
 
-        # Get dominant emotion from first detected face
-        if emotions_data:
-            dominant_emotion = max(emotions_data[0]["emotions"], key=emotions_data[0]["emotions"].get)
+         # Enrichment with Songs
+        dominant_emotion = None
+        mood_description = ""
+        recommended_songs = []
 
-            # Get song recommendations
-            recommended_songs = get_song_recommendations(dominant_emotion)
+        if emotions_data and len(emotions_data) > 0:
+            # Find dominant in first face
+            first_face_emotions = emotions_data[0]['emotions']
+            dominant_emotion = max(first_face_emotions, key=first_face_emotions.get)
+            
             mood_description = get_mood_description(dominant_emotion)
+            recommended_songs = get_song_recommendations(dominant_emotion)
 
-            response_data = {
-                'success': True,
-                'processed_image': f'/uploads/{os.path.basename(processed_path)}',
-                'emotions': emotions_data,
-                'dominant_emotion': dominant_emotion,
-                'mood_description': mood_description,
-                'recommended_songs': recommended_songs
-            }
-        else:
-            response_data = {
-                'success': True,
-                'processed_image': f'/uploads/{os.path.basename(processed_path)}',
-                'emotions': emotions_data
-            }
+        response_data = {
+            'success': True,
+            'processed_image': f'/uploads/{os.path.basename(processed_path)}',
+            'emotions': emotions_data,
+            'dominant_emotion': dominant_emotion,
+            'mood_description': mood_description,
+            'recommended_songs': recommended_songs
+        }
 
         return jsonify(response_data)
 
@@ -288,24 +305,16 @@ def webcam_capture():
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 
-@app.route('/get-songs/<emotion>')
-def get_songs_by_emotion(emotion):
-    """API endpoint to get songs for a specific emotion"""
-    try:
-        songs = get_song_recommendations(emotion, num_songs=8)
-        return jsonify({
-            'emotion': emotion,
-            'songs': songs,
-            'description': get_mood_description(emotion)
-        })
-    except Exception as e:
-        return jsonify({'error': f'Error getting songs: {str(e)}'}), 500
-
-
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     """Serve uploaded files"""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 if __name__ == '__main__':
