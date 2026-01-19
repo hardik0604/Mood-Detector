@@ -88,37 +88,69 @@ def process_image(image_path):
     try:
         session, input_name = get_onnx_session()
         
-        # Use OpenCV Haar Cascade (Robust Fallback)
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
+    try:
+        session, input_name = get_onnx_session()
+        
+        # Initialize MediaPipe Face Detection
+        import mediapipe as mp
+        if not hasattr(mp, 'solutions'):
+            import mediapipe.python.solutions as solutions
+            mp.solutions = solutions
+        
+        mp_face_detection = mp.solutions.face_detection
+        
         image = cv2.imread(image_path)
         if image is None:
             return None, "Invalid image file"
 
         h, w, _ = image.shape
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
-        # Detect faces
-        faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        # Run MediaPipe
+        with mp_face_detection.FaceDetection(min_detection_confidence=0.5) as face_detection:
+            results = face_detection.process(image_rgb)
+            
+            if not results.detections:
+                return None, "No face detected"
 
-        if len(faces) == 0:
-            return None, "No face detected"
+            output = []
 
-        output = []
+            for detection in results.detections:
+                bbox = detection.location_data.relative_bounding_box
+                
+                # Expand box slightly for context (FER+ likes this)
+                w_box = int(bbox.width * w)
+                h_box = int(bbox.height * h)
+                x = int(bbox.xmin * w)
+                y = int(bbox.ymin * h)
+                
+                # Careful 10% padding
+                pad_w = int(w_box * 0.1)
+                pad_h = int(h_box * 0.1)
+                
+                x1 = max(0, x - pad_w)
+                y1 = max(0, y - pad_h)
+                x2 = min(w, x + w_box + pad_w)
+                y2 = min(h, y + h_box + pad_h)
 
-        for (x, y, w_box, h_box) in faces:
-            # Convert to coordinates
-            x1, y1 = x, y
-            x2, y2 = x + w_box, y + h_box
-
-            # Padding (optional but good for emotion model)
-            face = image[y1:y2, x1:x2]
+                if x2 <= x1 or y2 <= y1:
+                    continue
+                
+                # Ensure we actually have data
+                face = image[y1:y2, x1:x2]
             
             if face.size == 0: 
                 continue
 
+            # Preprocessing for FERPlus: 
+            # 1. Grayscale
+            # 2. Resize to 64x64
+            # 3. Normalize
             gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
             resized = cv2.resize(gray_face, (64, 64))
+            
+            # Standard FERPlus processing often expects simple 0-1 or specific mean.
+            # We will use the simplest robust one: Just float division.
             normalized = resized.astype(np.float32) / 255.0
 
             input_tensor = normalized[np.newaxis, np.newaxis, :, :]
