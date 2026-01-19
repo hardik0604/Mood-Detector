@@ -213,5 +213,10 @@ def warmup():
     get_onnx_session()
     return "Warmed up"
 
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
