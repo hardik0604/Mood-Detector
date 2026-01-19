@@ -8,8 +8,6 @@ import io
 import uuid
 from PIL import Image
 
-# -------------------- APP --------------------
-
 app = Flask(__name__)
 
 # Ensure upload folder is absolute path relative to this file
@@ -21,14 +19,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(STATIC_FOLDER, exist_ok=True)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB
-
-# -------------------- GLOBALS (LAZY LOADED) --------------------
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
 ORT_SESSION = None
 INPUT_NAME = None
-
-# -------------------- CONSTANTS --------------------
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "bmp", "webp"}
 
@@ -54,33 +48,21 @@ EMOTION_TABLE = {
     "contempt": "disgust",
 }
 
-# -------------------- LAZY LOADERS --------------------
-
 def get_onnx_session():
     global ORT_SESSION, INPUT_NAME
     if ORT_SESSION is None:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(base_dir, "emotion-ferplus-8.onnx")
-        ORT_SESSION = ort.InferenceSession(
-            model_path,
-            providers=["CPUExecutionProvider"]
-        )
+        ORT_SESSION = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
         INPUT_NAME = ORT_SESSION.get_inputs()[0].name
     return ORT_SESSION, INPUT_NAME
-
-
-# -------------------- UTILS --------------------
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / np.sum(e_x)
-
-
-# -------------------- CORE LOGIC --------------------
 
 def process_image(image_path):
     try:
@@ -96,7 +78,6 @@ def process_image(image_path):
         h, w, _ = image.shape
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
-        # Detect faces
         faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
         if len(faces) == 0:
@@ -105,8 +86,6 @@ def process_image(image_path):
         output = []
 
         for (x, y, w_box, h_box) in faces:
-                
-            # Add 20% padding for better emotion detection
             pad_w = int(w_box * 0.20)
             pad_h = int(h_box * 0.20)
             
@@ -123,52 +102,34 @@ def process_image(image_path):
             if face.size == 0: 
                 continue
 
-            # Preprocessing for FERPlus: 
-            # This specific ONNX export expects RAW pixel values (0-255), NOT normalized!
-            # Verified via testing: Raw gives Happy detection, /255 gives Neutral bias.
             gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
             resized = cv2.resize(gray_face, (64, 64))
-                
-                # Use raw pixel values as float32
-                normalized = resized.astype(np.float32)
-                
-                input_tensor = normalized[np.newaxis, np.newaxis, :, :]
-                
-                scores = session.run(None, {input_name: input_tensor})[0][0]
-                probs = softmax(scores)
+            normalized = resized.astype(np.float32)
+            
+            input_tensor = normalized[np.newaxis, np.newaxis, :, :]
+            scores = session.run(None, {input_name: input_tensor})[0][0]
+            probs = softmax(scores)
 
-                emotions = {}
-                for i, score in enumerate(probs):
-                    key = EMOTION_TABLE[EMOTION_KEYS[i]]
-                    emotions[key] = max(emotions.get(key, 0), float(score))
+            emotions = {}
+            for i, score in enumerate(probs):
+                key = EMOTION_TABLE[EMOTION_KEYS[i]]
+                emotions[key] = max(emotions.get(key, 0), float(score))
 
-                dominant = max(emotions, key=emotions.get)
-                confidence = emotions[dominant]
+            dominant = max(emotions, key=emotions.get)
+            confidence = emotions[dominant]
 
-                output.append({
-                    "box": [int(x1), int(y1), int(x2-x1), int(y2-y1)],
-                    "emotions": emotions
-                })
+            output.append({
+                "box": [int(x1), int(y1), int(x2-x1), int(y2-y1)],
+                "emotions": emotions
+            })
 
-                # Draw bounding box (Red) -> (0, 0, 255) in BGR
-                cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                
-                # Draw Label
-                label = f"{dominant}: {confidence:.2f}"
-                cv2.putText(
-                    image,
-                    label,
-                    (x1, max(0, y1 - 10)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (0, 0, 255), # Red
-                    2,
-                )
+            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 3)
+            
+            label = f"{dominant}: {confidence:.2f}"
+            cv2.putText(image, label, (x1, max(0, y1 - 10)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-        output_path = os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            f"processed_{os.path.basename(image_path)}"
-        )
+        output_path = os.path.join(app.config["UPLOAD_FOLDER"], f"processed_{os.path.basename(image_path)}")
 
         if not cv2.imwrite(output_path, image):
             return None, "Failed to save image"
@@ -178,13 +139,9 @@ def process_image(image_path):
     except Exception as e:
         return None, str(e)
 
-
-# -------------------- ROUTES --------------------
-
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -210,7 +167,6 @@ def upload():
         "emotions": data,
     })
 
-
 @app.route("/webcam", methods=["POST"])
 def webcam():
     data = request.get_json()
@@ -235,11 +191,9 @@ def webcam():
         "emotions": data,
     })
 
-
 @app.route("/uploads/<filename>")
 def uploads(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-
 
 @app.route("/health")
 def health():
@@ -249,14 +203,10 @@ def health():
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)}), 500
 
-
 @app.route("/warmup")
 def warmup():
     get_onnx_session()
     return "Warmed up"
-
-
-# -------------------- ENTRY --------------------
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
