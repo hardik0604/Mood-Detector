@@ -1,9 +1,7 @@
-Flask==2.3.3
-deepface==0.0.97
-retina-face==0.0.17
-opencv-python==4.8.1.78
-tensorflow==2.13.0
+Flask==3.0.0
+gunicorn==21.2.0
+onnxruntime==1.17.0
+mediapipe==0.10.9
+numpy==1.26.3
+opencv-python-headless==4.9.0.80
 Pillow==10.2.0
-numpy==1.24.3
-moviepy==1.0.3
-tf-keras
