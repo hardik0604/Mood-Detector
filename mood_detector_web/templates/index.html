@@ -4,7 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentiment Analysis // MOOD</title>
+    <meta name="description"
+        content="AI-powered facial emotion detection and sentiment analysis using FER+ deep learning model. Analyze emotions in real-time or upload images.">
+    <meta name="keywords" content="emotion detection, sentiment analysis, facial recognition, AI, machine learning">
+    <title>MOOD.OS - AI Emotion Detection & Sentiment Analysis</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -145,14 +148,32 @@
             font-family: var(--font-mono);
             font-size: 0.85rem;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: all 0.2s ease;
             font-weight: 600;
             width: 100%;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(204, 255, 0, 0.3);
         }
 
         .btn:active {
-            transform: translateY(1px);
+            transform: translateY(0);
+        }
+
+        .btn:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-outline {
@@ -210,6 +231,12 @@
             max-height: 100%;
             object-fit: contain;
             display: block;
+            transition: opacity 0.3s ease;
+        }
+
+        #processedImage:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
         }
 
         #webcam {
@@ -289,6 +316,42 @@
         /* Utility */
         .hidden {
             display: none !important;
+        }
+
+        /* Accessibility - Screen Reader Only */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Focus visible for keyboard navigation */
+        *:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Smooth transitions for state changes */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .status-badge {
@@ -379,10 +442,11 @@
                 <div>
                     <span class="mono-label">Input Source</span>
 
-                    <div class="upload-zone" id="uploadArea">
-                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    <div class="upload-zone" id="uploadArea" role="button" tabindex="0"
+                        aria-label="Upload image for emotion detection. Click or drop an image here.">
+                        <input type="file" id="fileInput" accept="image/*" hidden aria-label="Image file input">
                         <div class="upload-zone-content">
-                            <i class="ri-file-add-line" style="font-size: 1.5rem;"></i>
+                            <i class="ri-file-add-line" style="font-size: 1.5rem;" aria-hidden="true"></i>
                             <div>
                                 <div style="font-weight: 500;">Drop Image Here</div>
                                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">or click to
@@ -398,14 +462,17 @@
                         <div style="height: 1px; background: var(--border); flex: 1;"></div>
                     </div>
 
-                    <button class="btn btn-outline" id="startWebcam">
-                        <i class="ri-camera-line"></i> ACTIVATE CAMERA
+                    <button class="btn btn-outline" id="startWebcam"
+                        aria-label="Activate camera for real-time emotion detection">
+                        <i class="ri-camera-line" aria-hidden="true"></i> ACTIVATE CAMERA
                     </button>
 
-                    <div id="webcamControls" class="hidden" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                        <button class="btn btn-accent" id="capture">CAPTURE</button>
-                        <button class="btn btn-outline" id="stopWebcam" style="width: auto;"><i
-                                class="ri-close-line"></i></button>
+                    <div id="webcamControls" class="hidden" style="margin-top: 1rem; display: flex; gap: 0.5rem;"
+                        role="group" aria-label="Webcam controls">
+                        <button class="btn btn-accent" id="capture"
+                            aria-label="Capture current frame for analysis">CAPTURE</button>
+                        <button class="btn btn-outline" id="stopWebcam" style="width: auto;" aria-label="Stop camera"><i
+                                class="ri-close-line" aria-hidden="true"></i></button>
                     </div>
                 </div>
 
@@ -421,16 +488,17 @@
                 </div>
             </div>
 
-            <button class="btn btn-outline" id="resetBtn" onclick="resetApp()" style="margin-top: auto;">
-                RESET SYSTEM
+            <button class="btn btn-outline" id="resetBtn" onclick="resetApp()" style="margin-top: auto;"
+                aria-label="Reset application to initial state">
+                <i class="ri-refresh-line" aria-hidden="true"></i> RESET SYSTEM
             </button>
         </aside>
 
         <!-- Main Viewport -->
-        <main class="viewport">
+        <main class="viewport" role="main" aria-label="Main content area">
             <div class="viewport-header">
-                <div class="status-badge">
-                    <div class="status-dot" id="statusDot"></div>
+                <div class="status-badge" role="status" aria-live="polite">
+                    <div class="status-dot" id="statusDot" aria-hidden="true"></div>
                     <span id="statusText">IDLE</span>
                 </div>
                 <div class="mono-label" style="margin: 0;">VIEWPORT_01</div>
@@ -453,7 +521,8 @@
                 </div>
 
                 <!-- Content -->
-                <img id="processedImage" src="" alt="" class="hidden">
+                <img id="processedImage" src="" alt="Processed image with emotion detection" class="hidden"
+                    tabindex="0">
 
                 <div id="webcamContainer" class="webcam-wrapper">
                     <video id="webcam" autoplay playsinline></video>
@@ -461,16 +530,18 @@
             </div>
 
             <!-- Bottom Panel -->
-            <div class="analysis-panel" id="results">
+            <div class="analysis-panel" id="results" role="region" aria-label="Emotion analysis results"
+                aria-live="polite">
                 <div class="stat-group">
                     <span class="mono-label">Dominant Affect</span>
-                    <div class="dominant-value" id="dominantEmotion">--</div>
-                    <div style="margin-top: 0.5rem; color: var(--text-muted);">Confidence: <span
-                            id="confidenceVal">0%</span></div>
+                    <div class="dominant-value" id="dominantEmotion" aria-label="Detected emotion">--</div>
+                    <div style="margin-top: 0.5rem; color: var(--text-muted);" aria-label="Confidence level">Confidence:
+                        <span id="confidenceVal">0%</span>
+                    </div>
                 </div>
 
                 <div class="chart-container">
-                    <canvas id="emotionChart"></canvas>
+                    <canvas id="emotionChart" role="img" aria-label="Emotion confidence distribution chart"></canvas>
                 </div>
             </div>
         </main>
@@ -518,7 +589,15 @@
             if (files.length) handleFile(files[0]);
         });
 
+        // Click and keyboard support for upload
         els.uploadArea.addEventListener('click', () => els.fileInput.click());
+        els.uploadArea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                els.fileInput.click();
+            }
+        });
+
         els.fileInput.addEventListener('change', () => {
             if (els.fileInput.files.length) handleFile(els.fileInput.files[0]);
         });
@@ -606,29 +685,29 @@
         }
 
         function showResults(data) {
-            // Display Image
+            // Display Image with fade-in
             els.processedImage.src = data.processed_image + '?t=' + Date.now();
-            els.emptyState.classList.add('hidden'); // Hide empty state immediately
+            els.emptyState.classList.add('hidden');
 
             els.processedImage.onload = () => {
-                setLoading(false); // Stop loader once image is loaded
+                setLoading(false);
                 els.processedImage.classList.remove('hidden');
-                // Force display block to override any specific hidden rules
+                els.processedImage.classList.add('fade-in');
                 els.processedImage.style.display = 'block';
-                els.results.classList.add('active'); // Show results panel
+                els.results.classList.add('active');
+
+                // Focus on results for accessibility
+                setTimeout(() => {
+                    els.results.focus();
+                }, 300);
             };
-            // If the image is already cached, onload might not fire.
-            // In that case, we ensure visibility after setting src.
+
             if (els.processedImage.complete && els.processedImage.naturalHeight !== 0) {
-                els.processedImage.onload(); // Manually trigger if already loaded
+                els.processedImage.onload();
             }
 
-
             if (data.emotions && data.emotions.length) {
-                // Simplify: take first face
                 const emotions = data.emotions[0].emotions;
-
-                // Sort for chart
                 const sorted = Object.entries(emotions)
                     .sort(([, a], [, b]) => b - a);
 
@@ -706,16 +785,28 @@
         function showError(msg) {
             els.errorDiv.innerText = `ERR: ${msg}`;
             els.errorDiv.classList.remove('hidden');
+            els.errorDiv.classList.add('fade-in');
+            els.errorDiv.setAttribute('role', 'alert');
             setStatus('ERROR', false);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                els.errorDiv.classList.add('hidden');
+            }, 5000);
         }
 
         function resetUI() {
             els.processedImage.classList.add('hidden');
+            els.processedImage.classList.remove('fade-in');
             els.results.classList.remove('active');
             els.errorDiv.classList.add('hidden');
             els.emptyState.classList.remove('hidden');
+            els.emptyState.classList.add('fade-in');
             if (chartInstance) chartInstance.destroy();
             stopWebcam();
+
+            // Reset file input
+            els.fileInput.value = '';
         }
 
         // Expose global for button
