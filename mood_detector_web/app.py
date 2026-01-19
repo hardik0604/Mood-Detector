@@ -86,61 +86,48 @@ def process_image(image_path):
     try:
         session, input_name = get_onnx_session()
         
-        # Initialize MediaPipe Face Detection
-        import mediapipe as mp
-        if not hasattr(mp, 'solutions'):
-            import mediapipe.python.solutions as solutions
-            mp.solutions = solutions
-        
-        mp_face_detection = mp.solutions.face_detection
+        # Use OpenCV Haar Cascade (lightweight, reliable on Render)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
         image = cv2.imread(image_path)
         if image is None:
             return None, "Invalid image file"
 
         h, w, _ = image.shape
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
-        # Run MediaPipe
-        with mp_face_detection.FaceDetection(min_detection_confidence=0.5) as face_detection:
-            results = face_detection.process(image_rgb)
+        # Detect faces
+        faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+        if len(faces) == 0:
+            return None, "No face detected"
+
+        output = []
+
+        for (x, y, w_box, h_box) in faces:
+                
+            # Add 20% padding for better emotion detection
+            pad_w = int(w_box * 0.20)
+            pad_h = int(h_box * 0.20)
             
-            if not results.detections:
-                return None, "No face detected"
+            x1 = max(0, x - pad_w)
+            y1 = max(0, y - pad_h)
+            x2 = min(w, x + w_box + pad_w)
+            y2 = min(h, y + h_box + pad_h)
 
-            output = []
+            if x2 <= x1 or y2 <= y1:
+                continue
+            
+            face = image[y1:y2, x1:x2]
+            
+            if face.size == 0: 
+                continue
 
-            for detection in results.detections:
-                bbox = detection.location_data.relative_bounding_box
-                
-                # FERPlus needs context, especially for smiles (cheeks/chin).
-                # Adding 20% padding to capture full facial expressions.
-                w_box = int(bbox.width * w)
-                h_box = int(bbox.height * h)
-                x = int(bbox.xmin * w)
-                y = int(bbox.ymin * h)
-                
-                pad_w = int(w_box * 0.20) 
-                pad_h = int(h_box * 0.20)
-                
-                x1 = max(0, x - pad_w)
-                y1 = max(0, y - pad_h)
-                x2 = min(w, x + w_box + pad_w)
-                y2 = min(h, y + h_box + pad_h)
-
-                if x2 <= x1 or y2 <= y1:
-                    continue
-                
-                face = image[y1:y2, x1:x2]
-                
-                if face.size == 0: 
-                    continue
-
-                # Preprocessing for FERPlus: 
-                # This specific ONNX export expects RAW pixel values (0-255), NOT normalized!
-                # Verified via testing: Raw gives Happy detection, /255 gives Neutral bias.
-                gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
-                resized = cv2.resize(gray_face, (64, 64))
+            # Preprocessing for FERPlus: 
+            # This specific ONNX export expects RAW pixel values (0-255), NOT normalized!
+            # Verified via testing: Raw gives Happy detection, /255 gives Neutral bias.
+            gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+            resized = cv2.resize(gray_face, (64, 64))
                 
                 # Use raw pixel values as float32
                 normalized = resized.astype(np.float32)
@@ -252,6 +239,15 @@ def webcam():
 @app.route("/uploads/<filename>")
 def uploads(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+
+@app.route("/health")
+def health():
+    try:
+        get_onnx_session()
+        return jsonify({"status": "ok", "model": "loaded"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 
 @app.route("/warmup")
