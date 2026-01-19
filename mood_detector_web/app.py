@@ -195,6 +195,11 @@ def webcam():
 def uploads(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204  # No Content - prevents console errors
+
+
 @app.route("/health")
 def health():
     try:
