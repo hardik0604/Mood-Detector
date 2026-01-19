@@ -219,6 +219,18 @@
             object-fit: cover;
         }
 
+        .scan-feed img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            /* Default to block, rely on .hidden class to toggle */
+        }
+
+        .scan-feed img.hidden {
+            display: none !important;
+        }
+
         /* Analysis Overlay / Panel */
         .analysis-panel {
             position: absolute;
@@ -589,17 +601,28 @@
                 showError(err.message || 'SYSTEM_ERROR');
             } finally {
                 setLoading(false);
+                // setLoading(false); // Moved to image onload
             }
         }
 
         function showResults(data) {
             // Display Image
             els.processedImage.src = data.processed_image + '?t=' + Date.now();
-            els.processedImage.classList.remove('hidden');
-            els.emptyState.classList.add('hidden');
+            els.emptyState.classList.add('hidden'); // Hide empty state immediately
 
-            // Show Panel
-            els.results.classList.add('active');
+            els.processedImage.onload = () => {
+                setLoading(false); // Stop loader once image is loaded
+                els.processedImage.classList.remove('hidden');
+                // Force display block to override any specific hidden rules
+                els.processedImage.style.display = 'block';
+                els.results.classList.add('active'); // Show results panel
+            };
+            // If the image is already cached, onload might not fire.
+            // In that case, we ensure visibility after setting src.
+            if (els.processedImage.complete && els.processedImage.naturalHeight !== 0) {
+                els.processedImage.onload(); // Manually trigger if already loaded
+            }
+
 
             if (data.emotions && data.emotions.length) {
                 // Simplify: take first face

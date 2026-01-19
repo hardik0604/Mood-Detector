@@ -3,7 +3,6 @@ import os
 import cv2
 import numpy as np
 import onnxruntime as ort
-import mediapipe as mp
 import base64
 import io
 import uuid
@@ -13,8 +12,10 @@ from PIL import Image
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
-STATIC_FOLDER = "static"
+# Ensure upload folder is absolute path relative to this file
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+STATIC_FOLDER = os.path.join(BASE_DIR, "static")
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(STATIC_FOLDER, exist_ok=True)
@@ -26,7 +27,6 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB
 
 ORT_SESSION = None
 INPUT_NAME = None
-FACE_DETECTOR = None
 
 # -------------------- CONSTANTS --------------------
 
@@ -69,8 +69,6 @@ def get_onnx_session():
     return ORT_SESSION, INPUT_NAME
 
 
-
-
 # -------------------- UTILS --------------------
 
 def allowed_file(filename):
@@ -85,9 +83,6 @@ def softmax(x):
 # -------------------- CORE LOGIC --------------------
 
 def process_image(image_path):
-    try:
-        session, input_name = get_onnx_session()
-        
     try:
         session, input_name = get_onnx_session()
         
@@ -118,15 +113,15 @@ def process_image(image_path):
             for detection in results.detections:
                 bbox = detection.location_data.relative_bounding_box
                 
-                # Expand box slightly for context (FER+ likes this)
+                # FERPlus needs context, especially for smiles (cheeks/chin).
+                # Adding 20% padding to capture full facial expressions.
                 w_box = int(bbox.width * w)
                 h_box = int(bbox.height * h)
                 x = int(bbox.xmin * w)
                 y = int(bbox.ymin * h)
                 
-                # Careful 10% padding
-                pad_w = int(w_box * 0.1)
-                pad_h = int(h_box * 0.1)
+                pad_w = int(w_box * 0.20) 
+                pad_h = int(h_box * 0.20)
                 
                 x1 = max(0, x - pad_w)
                 y1 = max(0, y - pad_h)
@@ -136,50 +131,52 @@ def process_image(image_path):
                 if x2 <= x1 or y2 <= y1:
                     continue
                 
-                # Ensure we actually have data
                 face = image[y1:y2, x1:x2]
-            
-            if face.size == 0: 
-                continue
+                
+                if face.size == 0: 
+                    continue
 
-            # Preprocessing for FERPlus: 
-            # 1. Grayscale
-            # 2. Resize to 64x64
-            # 3. Normalize
-            gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
-            resized = cv2.resize(gray_face, (64, 64))
-            
-            # Standard FERPlus processing often expects simple 0-1 or specific mean.
-            # We will use the simplest robust one: Just float division.
-            normalized = resized.astype(np.float32) / 255.0
+                # Preprocessing for FERPlus: 
+                # This specific ONNX export expects RAW pixel values (0-255), NOT normalized!
+                # Verified via testing: Raw gives Happy detection, /255 gives Neutral bias.
+                gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+                resized = cv2.resize(gray_face, (64, 64))
+                
+                # Use raw pixel values as float32
+                normalized = resized.astype(np.float32)
+                
+                input_tensor = normalized[np.newaxis, np.newaxis, :, :]
+                
+                scores = session.run(None, {input_name: input_tensor})[0][0]
+                probs = softmax(scores)
 
-            input_tensor = normalized[np.newaxis, np.newaxis, :, :]
-            scores = session.run(None, {input_name: input_tensor})[0][0]
-            probs = softmax(scores)
+                emotions = {}
+                for i, score in enumerate(probs):
+                    key = EMOTION_TABLE[EMOTION_KEYS[i]]
+                    emotions[key] = max(emotions.get(key, 0), float(score))
 
-            emotions = {}
-            for i, score in enumerate(probs):
-                key = EMOTION_TABLE[EMOTION_KEYS[i]]
-                emotions[key] = max(emotions.get(key, 0), float(score))
+                dominant = max(emotions, key=emotions.get)
+                confidence = emotions[dominant]
 
-            dominant = max(emotions, key=emotions.get)
-            confidence = emotions[dominant]
+                output.append({
+                    "box": [int(x1), int(y1), int(x2-x1), int(y2-y1)],
+                    "emotions": emotions
+                })
 
-            output.append({
-                "box": [int(x1), int(y1), int(w_box), int(h_box)],
-                "emotions": emotions
-            })
-
-            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(
-                image,
-                f"{dominant}: {confidence:.2f}",
-                (x1, max(0, y1 - 10)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
-                (0, 255, 0),
-                2,
-            )
+                # Draw bounding box (Red) -> (0, 0, 255) in BGR
+                cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                
+                # Draw Label
+                label = f"{dominant}: {confidence:.2f}"
+                cv2.putText(
+                    image,
+                    label,
+                    (x1, max(0, y1 - 10)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 0, 255), # Red
+                    2,
+                )
 
         output_path = os.path.join(
             app.config["UPLOAD_FOLDER"],
@@ -193,6 +190,7 @@ def process_image(image_path):
 
     except Exception as e:
         return None, str(e)
+
 
 # -------------------- ROUTES --------------------
 
@@ -210,7 +208,7 @@ def upload():
     if file.filename == "" or not allowed_file(file.filename):
         return jsonify({"error": "Invalid file"}), 400
 
-    filename = f"{uuid.uuid4().hex}_{file.filename}"
+    filename = f"{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(filepath)
 
