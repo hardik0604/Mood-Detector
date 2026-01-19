@@ -59,22 +59,17 @@ EMOTION_TABLE = {
 def get_onnx_session():
     global ORT_SESSION, INPUT_NAME
     if ORT_SESSION is None:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(base_dir, "emotion-ferplus-8.onnx")
         ORT_SESSION = ort.InferenceSession(
-            "emotion-ferplus-8.onnx",
+            model_path,
             providers=["CPUExecutionProvider"]
         )
         INPUT_NAME = ORT_SESSION.get_inputs()[0].name
     return ORT_SESSION, INPUT_NAME
 
 
-def get_face_detector():
-    global FACE_DETECTOR
-    if FACE_DETECTOR is None:
-        mp_face_detection = mp.solutions.face_detection
-        FACE_DETECTOR = mp_face_detection.FaceDetection(
-            min_detection_confidence=0.5
-        )
-    return FACE_DETECTOR
+
 
 # -------------------- UTILS --------------------
 
@@ -92,35 +87,38 @@ def softmax(x):
 def process_image(image_path):
     try:
         session, input_name = get_onnx_session()
-        detector = get_face_detector()
+        
+        # Use OpenCV Haar Cascade (Robust Fallback)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
         image = cv2.imread(image_path)
         if image is None:
             return None, "Invalid image file"
 
         h, w, _ = image.shape
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        # Detect faces
+        faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-        results = detector.process(image_rgb)
-        if not results.detections:
+        if len(faces) == 0:
             return None, "No face detected"
 
         output = []
 
-        for detection in results.detections:
-            bbox = detection.location_data.relative_bounding_box
+        for (x, y, w_box, h_box) in faces:
+            # Convert to coordinates
+            x1, y1 = x, y
+            x2, y2 = x + w_box, y + h_box
 
-            x1 = max(0, int(bbox.xmin * w))
-            y1 = max(0, int(bbox.ymin * h))
-            x2 = min(w, int((bbox.xmin + bbox.width) * w))
-            y2 = min(h, int((bbox.ymin + bbox.height) * h))
-
-            if x2 <= x1 or y2 <= y1:
+            # Padding (optional but good for emotion model)
+            face = image[y1:y2, x1:x2]
+            
+            if face.size == 0: 
                 continue
 
-            face = image[y1:y2, x1:x2]
-            gray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
-            resized = cv2.resize(gray, (64, 64))
+            gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+            resized = cv2.resize(gray_face, (64, 64))
             normalized = resized.astype(np.float32) / 255.0
 
             input_tensor = normalized[np.newaxis, np.newaxis, :, :]
@@ -136,7 +134,7 @@ def process_image(image_path):
             confidence = emotions[dominant]
 
             output.append({
-                "box": [x1, y1, x2 - x1, y2 - y1],
+                "box": [int(x1), int(y1), int(w_box), int(h_box)],
                 "emotions": emotions
             })
 
@@ -229,7 +227,6 @@ def uploads(filename):
 @app.route("/warmup")
 def warmup():
     get_onnx_session()
-    get_face_detector()
     return "Warmed up"
 
 
