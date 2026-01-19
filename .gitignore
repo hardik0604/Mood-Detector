@@ -26,6 +26,5 @@ Thumbs.db
 
 # App specific
 uploads/
-*.onnx
 processed_*
 webcam_capture.jpg
