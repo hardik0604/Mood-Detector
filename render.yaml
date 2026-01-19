@@ -3,6 +3,6 @@ services:
     name: mood-detector
     env: python
     rootDir: mood_detector_web
-    buildCommand: pip install -r requirements.txt && python ../download_model.py
+    buildCommand: pip cache purge && pip install --no-cache-dir -r requirements.txt && python ../download_model.py
     startCommand: gunicorn app:app
     plan: free
