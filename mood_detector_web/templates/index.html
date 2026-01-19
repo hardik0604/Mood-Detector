@@ -4,12 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoodFlow | AI Emotion Analytics</title>
-    <link rel="icon" href="https://fav.farm/🎭" />
+    <title>Sentiment Analysis // MOOD</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <!-- Charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Icons -->
@@ -17,16 +18,18 @@
 
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #ec4899;
-            --bg-dark: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(148, 163, 184, 0.1);
-            --gradient: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-            --glass: blur(12px);
+            --bg: #080808;
+            --surface: #121212;
+            --surface-hover: #1a1a1a;
+            --border: #333333;
+            --accent: #CCFF00;
+            /* Acid Green/Yellow */
+            --accent-dim: rgba(204, 255, 0, 0.1);
+            --text: #ffffff;
+            --text-muted: #666666;
+
+            --font-ui: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
         * {
@@ -36,630 +39,665 @@
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            background-image:
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 40%);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-ui);
+            line-height: 1.5;
             min-height: 100vh;
-            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
         }
 
-        .container {
-            max-width: 1200px;
+        /* Brutalist / Technical Layout */
+        .layout {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        /* Header */
-        header {
-            text-align: center;
-            margin-bottom: 60px;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Main Grid */
-        .app-grid {
+            width: 100%;
+            padding: 2rem;
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 40px;
-            max-width: 800px;
-            margin: 0 auto;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            height: 100vh;
         }
 
-        @media (min-width: 992px) {
-            .app-grid {
-                grid-template-columns: 1fr 1fr;
-                max-width: 100%;
-                align-items: start;
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+                height: auto;
+                padding: 1rem;
             }
         }
 
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            backdrop-filter: var(--glass);
-            border-radius: 24px;
-            padding: 32px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* Typography */
+        h1,
+        h2,
+        h3 {
+            font-weight: 400;
+            letter-spacing: -0.02em;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            border-color: rgba(99, 102, 241, 0.2);
+        .mono-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: block;
         }
 
-        /* Upload Section */
-        .upload-area {
-            border: 2px dashed rgba(99, 102, 241, 0.3);
-            border-radius: 16px;
-            padding: 40px 20px;
-            text-align: center;
+        /* Sidebar / Controls */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            border-right: 1px solid var(--border);
+            padding-right: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding-right: 0;
+                padding-bottom: 2rem;
+            }
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .brand span {
+            color: var(--accent);
+        }
+
+        /* Upload Zone - Technical Look */
+        .upload-zone {
+            border: 1px dashed var(--border);
+            background: var(--surface);
+            padding: 2rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
             position: relative;
-            overflow: hidden;
         }
 
-        .upload-area:hover,
-        .upload-area.dragover {
-            border-color: var(--secondary);
-            background: rgba(99, 102, 241, 0.05);
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
         }
 
-        .upload-icon {
-            font-size: 3rem;
-            margin-bottom: 16px;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .upload-zone-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
         }
 
         .btn {
-            background: var(--gradient);
-            color: white;
+            background: var(--text);
+            color: var(--bg);
             border: none;
-            padding: 12px 32px;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transition: transform 0.1s;
+            font-weight: 600;
+            width: 100%;
+            text-align: center;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        .btn:active {
+            transform: translateY(1px);
         }
 
-        .btn-secondary {
+        .btn-outline {
             background: transparent;
             border: 1px solid var(--border);
-            box-shadow: none;
+            color: var(--text);
         }
 
-        .btn-secondary:hover {
-            border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.1);
+        .btn-outline:hover {
+            border-color: var(--text);
         }
 
-        /* Webcam */
-        .webcam-container {
+        .btn-accent {
+            background: var(--accent);
+            color: #000;
+        }
+
+        /* Main Viewport */
+        .viewport {
             position: relative;
-            border-radius: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
-            background: #000;
-            aspect-ratio: 4/3;
-            display: none;
-            margin-top: 20px;
+        }
+
+        .viewport-header {
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg);
+        }
+
+        .viewport-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: auto;
+            min-height: 400px;
+            background: repeating-linear-gradient(45deg,
+                    #0f0f0f,
+                    #0f0f0f 10px,
+                    #121212 10px,
+                    #121212 20px);
+        }
+
+        #processedImage,
+        #webcam {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         #webcam {
+            transform: scaleX(-1);
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scaleX(-1);
-            /* Mirror effect */
         }
 
-        /* Results */
-        .results-section {
-            display: none;
-            animation: fadeIn 0.5s ease-out;
+        /* Analysis Overlay / Panel */
+        .analysis-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(8, 8, 8, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            gap: 2rem;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .preview-image {
-            width: 100%;
-            max-height: 500px;
-            object-fit: contain;
-            border-radius: 16px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .analysis-panel.active {
+            transform: translateY(0);
         }
 
-        .stats-container {
-            margin-top: 24px;
-            position: relative;
-            height: 350px;
-            width: 100%;
+        @media (max-width: 768px) {
+            .analysis-panel {
+                flex-direction: column;
+                height: 100%;
+                /* Full screen on mobile */
+                top: 0;
+                overflow-y: auto;
+            }
         }
 
-        .dominant-emotion {
-            text-align: center;
-            margin-bottom: 32px;
+        /* Data Visualization */
+        .stat-group {
+            flex: 0 0 200px;
         }
 
-        .emotion-label {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-
-        .emotion-value {
+        .dominant-value {
             font-size: 3rem;
-            font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-transform: capitalize;
+            font-family: var(--font-mono);
+            line-height: 1;
+            color: var(--accent);
+            text-transform: uppercase;
         }
 
-        /* Loading */
-        .loader {
+        .chart-container {
+            flex: 1;
+            height: 150px;
+        }
+
+        /* Webcam Container */
+        .webcam-wrapper {
+            width: 100%;
+            height: 100%;
             display: none;
-            text-align: center;
-            padding: 40px;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
             border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
-            margin: 0 auto 16px;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .status-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent-dim);
         }
 
-        @keyframes fadeIn {
-            from {
+        /* Loader */
+        .loader-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            position: absolute;
+            top: 0;
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
                 opacity: 0;
-                transform: translateY(10px);
             }
 
-            to {
+            10% {
                 opacity: 1;
-                transform: translateY(0);
             }
-        }
 
-        @keyframes fadeInDown {
-            from {
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
                 opacity: 0;
-                transform: translateY(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
             }
         }
 
-        /* Tags */
-        .badge {
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--primary);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+        /* Placeholder */
+        .placeholder {
+            text-align: center;
+            color: var(--text-muted);
         }
 
-        /* File Input */
-        input[type="file"] {
-            display: none;
+        .placeholder i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: 0.5;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>MoodFlow <span class="badge">AI</span></h1>
-            <p class="subtitle">Advanced artificial intelligence that perceives and analyzes human emotions with
-                precision.</p>
-        </header>
+    <div class="layout">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="brand">
+                MOOD<span>.OS</span>
+            </div>
 
-        <div class="app-grid">
-            <!-- Left Column: Input -->
-            <div class="input-section">
-                <div class="card">
-                    <h2 style="margin-bottom: 24px;">Analyze Image</h2>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 2rem;">
+                <div>
+                    <span class="mono-label">Input Source</span>
 
-                    <!-- Upload Area -->
-                    <div class="upload-area" id="uploadArea">
-                        <i class="ri-upload-cloud-2-line upload-icon"></i>
-                        <h3 style="margin-bottom: 8px;">Upload Photo</h3>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
-                            Drag & drop or click to browse
-                        </p>
-                        <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
-                            Select File
-                        </button>
-                        <input type="file" id="fileInput" accept="image/*">
+                    <div class="upload-zone" id="uploadArea">
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <div class="upload-zone-content">
+                            <i class="ri-file-add-line" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <div style="font-weight: 500;">Drop Image Here</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">or click to
+                                    browse</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div style="text-align: center; margin: 20px 0; color: var(--text-muted);">or</div>
+                    <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+                        <div style="height: 1px; background: var(--border); flex: 1;"></div>
+                        <span
+                            style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">OR</span>
+                        <div style="height: 1px; background: var(--border); flex: 1;"></div>
+                    </div>
 
-                    <!-- Webcam Controls -->
-                    <button class="btn" id="startWebcam" style="width: 100%; justify-content: center;">
-                        <i class="ri-camera-line"></i> Use Webcam
+                    <button class="btn btn-outline" id="startWebcam">
+                        <i class="ri-camera-line"></i> ACTIVATE CAMERA
                     </button>
 
-                    <div class="webcam-container" id="webcamContainer">
-                        <video id="webcam" autoplay playsinline></video>
-                    </div>
-
-                    <div id="webcamControls" style="display: none; gap: 10px; margin-top: 16px;">
-                        <button class="btn" id="capture" style="flex: 1; justify-content: center;">
-                            <i class="ri-shutter-line"></i> Capture
-                        </button>
-                        <button class="btn btn-secondary" id="stopWebcam" style="flex: 1; justify-content: center;">
-                            Cancel
-                        </button>
-                    </div>
-
-                    <!-- Error Display -->
-                    <div id="error"
-                        style="display: none; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 16px; border-radius: 12px; margin-top: 20px; font-size: 0.9rem;">
+                    <div id="webcamControls" class="hidden" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                        <button class="btn btn-accent" id="capture">CAPTURE</button>
+                        <button class="btn btn-outline" id="stopWebcam" style="width: auto;"><i
+                                class="ri-close-line"></i></button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right Column: Results -->
-            <div class="output-section">
-                <!-- Loading State -->
-                <div class="card loader" id="loader">
-                    <div class="spinner"></div>
-                    <h3>Processing...</h3>
-                    <p style="color: var(--text-muted);">Analyzing facial micro-expressions</p>
-                </div>
-
-                <!-- Empty State -->
-                <div class="card" id="emptyState" style="text-align: center; padding: 60px 40px;">
-                    <i class="ri-emotion-line"
-                        style="font-size: 4rem; color: var(--border); margin-bottom: 16px; display: block;"></i>
-                    <h3 style="color: var(--text-muted);">No analysis yet</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">Upload an image or use your camera to see
-                        emotion analytics.</p>
-                </div>
-
-                <!-- Results State -->
-                <div class="results-section" id="results">
-                    <!-- Main Card -->
-                    <div class="card">
-                        <div class="dominant-emotion">
-                            <div class="emotion-label">Dominant Emotion</div>
-                            <div class="emotion-value" id="dominantEmotion">-</div>
-                        </div>
-
-                        <img id="processedImage" class="preview-image" src="" alt="Analyzed Face">
-
-                        <div class="stats-container">
-                            <h4 style="margin-bottom: 16px;">Emotion Breakdown</h4>
-                            <canvas id="emotionChart"></canvas>
-                        </div>
-
-                        <div
-                            style="text-align: center; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 20px;">
-                            <button class="btn btn-secondary" onclick="resetApp()">
-                                <i class="ri-refresh-line"></i> Start Over
-                            </button>
-                        </div>
+                <div>
+                    <span class="mono-label">System Log</span>
+                    <div id="error" class="hidden"
+                        style="color: #ff3333; font-family: var(--font-mono); font-size: 0.85rem; margin-top: 0.5rem;">
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                        v.1.0.2 Stable<br>
+                        ONNX Runtime Ready
                     </div>
                 </div>
             </div>
-        </div>
+
+            <button class="btn btn-outline" id="resetBtn" onclick="resetApp()" style="margin-top: auto;">
+                RESET SYSTEM
+            </button>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="viewport">
+            <div class="viewport-header">
+                <div class="status-badge">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">IDLE</span>
+                </div>
+                <div class="mono-label" style="margin: 0;">VIEWPORT_01</div>
+            </div>
+
+            <div class="viewport-content">
+                <!-- States -->
+                <div id="emptyState" class="placeholder">
+                    <i class="ri-focus-3-line"></i>
+                    AWAITING INPUT
+                </div>
+
+                <!-- Loader -->
+                <div id="loader" class="loader-overlay hidden">
+                    <div class="scan-line"></div>
+                    <div
+                        style="background: var(--bg); padding: 0.5rem 1rem; border: 1px solid var(--accent); color: var(--accent); font-family: var(--font-mono);">
+                        ANALYZING...
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <img id="processedImage" src="" alt="" class="hidden">
+
+                <div id="webcamContainer" class="webcam-wrapper">
+                    <video id="webcam" autoplay playsinline></video>
+                </div>
+            </div>
+
+            <!-- Bottom Panel -->
+            <div class="analysis-panel" id="results">
+                <div class="stat-group">
+                    <span class="mono-label">Dominant Affect</span>
+                    <div class="dominant-value" id="dominantEmotion">--</div>
+                    <div style="margin-top: 0.5rem; color: var(--text-muted);">Confidence: <span
+                            id="confidenceVal">0%</span></div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="emotionChart"></canvas>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
+        // --- Technical Theme JS ---
+
         let webcamStream = null;
         let chartInstance = null;
+        const els = {
+            uploadArea: document.getElementById('uploadArea'),
+            fileInput: document.getElementById('fileInput'),
+            loader: document.getElementById('loader'),
+            results: document.getElementById('results'),
+            emptyState: document.getElementById('emptyState'),
+            processedImage: document.getElementById('processedImage'),
+            webcamContainer: document.getElementById('webcamContainer'),
+            webcamVideo: document.getElementById('webcam'),
+            startWebcamBtn: document.getElementById('startWebcam'),
+            webcamControls: document.getElementById('webcamControls'),
+            errorDiv: document.getElementById('error'),
+            statusText: document.getElementById('statusText'),
+            statusDot: document.getElementById('statusDot')
+        };
 
-        // UI Elements
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const loader = document.getElementById('loader');
-        const results = document.getElementById('results');
-        const emptyState = document.getElementById('emptyState');
-        const errorDiv = document.getElementById('error');
+        // Initialize Chart Defaults
+        Chart.defaults.color = '#666';
+        Chart.defaults.font.family = '"JetBrains Mono", monospace';
+        Chart.defaults.font.size = 11;
 
         // Drag & Drop
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
+            els.uploadArea.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
         });
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        els.uploadArea.addEventListener('dragenter', () => els.uploadArea.classList.add('dragover'));
+        els.uploadArea.addEventListener('dragleave', () => els.uploadArea.classList.remove('dragover'));
+        els.uploadArea.addEventListener('drop', (e) => {
+            els.uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
         });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        els.uploadArea.addEventListener('click', () => els.fileInput.click());
+        els.fileInput.addEventListener('change', () => {
+            if (els.fileInput.files.length) handleFile(els.fileInput.files[0]);
         });
 
-        uploadArea.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        });
-
-        fileInput.addEventListener('change', function () {
-            handleFiles(this.files);
-        });
-
-        function handleFiles(files) {
-            if (files.length > 0) {
-                uploadFile(files[0]);
-                fileInput.value = ''; // Reset input to allow re-uploading same file
-            }
-        }
-
-        // Webcam Logic
-        const startWebcamBtn = document.getElementById('startWebcam');
-        const webcamContainer = document.getElementById('webcamContainer');
-        const webcamControls = document.getElementById('webcamControls');
-        const webcamVideo = document.getElementById('webcam');
-        const stopWebcamBtn = document.getElementById('stopWebcam');
-        const captureBtn = document.getElementById('capture');
-
-        startWebcamBtn.addEventListener('click', async () => {
+        // Webcam
+        els.startWebcamBtn.addEventListener('click', async () => {
             try {
-                // Hide controls immediately to show feedback
-                startWebcamBtn.style.display = 'none';
-                uploadArea.style.display = 'none';
+                resetUI();
+                setStatus('CAMERA_ACTIVE', true);
 
                 webcamStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
+                    video: { width: 1280, height: 720 }
                 });
-                webcamVideo.srcObject = webcamStream;
-                webcamContainer.style.display = 'block';
-                webcamControls.style.display = 'flex';
+
+                els.webcamVideo.srcObject = webcamStream;
+                els.webcamContainer.style.display = 'block';
+                els.emptyState.classList.add('hidden');
+
+                els.startWebcamBtn.classList.add('hidden');
+                els.webcamControls.classList.remove('hidden');
+                els.webcamControls.style.display = 'flex';
+
             } catch (err) {
-                showError('Could not access webcam. Please verify permissions.');
-                // Restore controls on error
-                startWebcamBtn.style.display = 'flex';
-                uploadArea.style.display = 'block';
+                showError('CAMERA_ACCESS_DENIED');
             }
         });
 
-        stopWebcamBtn.addEventListener('click', () => {
+        document.getElementById('stopWebcam').addEventListener('click', stopWebcam);
+
+        document.getElementById('capture').addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = els.webcamVideo.videoWidth;
+            canvas.height = els.webcamVideo.videoHeight;
+            canvas.getContext('2d').drawImage(els.webcamVideo, 0, 0);
+
+            const imageData = canvas.toDataURL('image/jpeg');
             stopWebcam();
+
+            processRequest('/webcam', { image: imageData });
         });
 
         function stopWebcam() {
             if (webcamStream) {
-                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream.getTracks().forEach(t => t.stop());
                 webcamStream = null;
             }
-            webcamContainer.style.display = 'none';
-            webcamControls.style.display = 'none';
-            startWebcamBtn.style.display = 'flex';
-            uploadArea.style.display = 'block';
+            els.webcamContainer.style.display = 'none';
+            els.startWebcamBtn.classList.remove('hidden');
+            els.webcamControls.classList.add('hidden');
+            setStatus('IDLE', false);
         }
 
-        captureBtn.addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = webcamVideo.videoWidth;
-            canvas.height = webcamVideo.videoHeight;
-            canvas.getContext('2d').drawImage(webcamVideo, 0, 0);
-            const imageData = canvas.toDataURL('image/jpeg');
-            stopWebcam();
-            sendWebcamImage(imageData);
-        });
-
-        // API Interaction
-        async function uploadFile(file) {
-            setLoading(true);
+        async function handleFile(file) {
+            resetUI();
             const formData = new FormData();
             formData.append('file', file);
-
-            try {
-                const response = await fetch('/upload', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.success) handleSuccess(data);
-                else throw new Error(data.error || 'Upload failed');
-            } catch (err) {
-                showError(err.message);
-            } finally {
-                setLoading(false);
-            }
+            processRequest('/upload', formData, false); // false = not JSON
         }
 
-        async function sendWebcamImage(base64Image) {
+        async function processRequest(url, body, isJson = true) {
             setLoading(true);
             try {
-                const response = await fetch('/webcam', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: base64Image })
-                });
-                const data = await response.json();
-                if (data.success) handleSuccess(data);
-                else throw new Error(data.error || 'Processing failed');
+                const opts = { method: 'POST' };
+                if (isJson) {
+                    opts.headers = { 'Content-Type': 'application/json' };
+                    opts.body = JSON.stringify(body);
+                } else {
+                    opts.body = body;
+                }
+
+                const res = await fetch(url, opts);
+                const data = await res.json();
+
+                if (data.success) {
+                    showResults(data);
+                } else {
+                    throw new Error(data.error);
+                }
             } catch (err) {
-                showError(err.message);
+                showError(err.message || 'SYSTEM_ERROR');
             } finally {
                 setLoading(false);
             }
         }
 
-        // State Management
-        function setLoading(isLoading) {
-            if (isLoading) {
-                loader.style.display = 'block';
-                emptyState.style.display = 'none';
-                results.style.display = 'none';
-                errorDiv.style.display = 'none';
-            } else {
-                loader.style.display = 'none';
+        function showResults(data) {
+            // Display Image
+            els.processedImage.src = data.processed_image + '?t=' + Date.now();
+            els.processedImage.classList.remove('hidden');
+            els.emptyState.classList.add('hidden');
+
+            // Show Panel
+            els.results.classList.add('active');
+
+            if (data.emotions && data.emotions.length) {
+                // Simplify: take first face
+                const emotions = data.emotions[0].emotions;
+
+                // Sort for chart
+                const sorted = Object.entries(emotions)
+                    .sort(([, a], [, b]) => b - a);
+
+                const dominant = sorted[0];
+                document.getElementById('dominantEmotion').innerText = dominant[0];
+                document.getElementById('confidenceVal').innerText = (dominant[1] * 100).toFixed(1) + '%';
+
+                // Colorize dominant text based on sentiment (approx)
+                // We use CSS class or inline for simplicity with the Acid theme
+                const val = document.getElementById('dominantEmotion');
+                val.style.color = 'var(--accent)';
+
+                updateChart(sorted);
             }
         }
 
-        function showError(msg) {
-            errorDiv.textContent = msg;
-            errorDiv.style.display = 'block';
-            emptyState.style.display = 'block';
-        }
-
-        function handleSuccess(data) {
-            results.style.display = 'block';
-            document.getElementById('processedImage').src = data.processed_image + '?t=' + new Date().getTime();
-
-            // Assuming single face for simplicity in chart, or taking the biggest face
-            // If multiple faces, you might want to switch between them or just show the first one
-            // The current backend code iterates faces, so `data.emotions` is a list.
-
-            if (data.emotions && data.emotions.length > 0) {
-                const face = data.emotions[0]; // Take primary face
-                const emotions = face.emotions;
-
-                // Find dominant
-                const dominant = Object.keys(emotions).reduce((a, b) => emotions[a] > emotions[b] ? a : b);
-                document.getElementById('dominantEmotion').textContent = dominant;
-                document.getElementById('dominantEmotion').style.color = getEmotionColor(dominant);
-
-                updateChart(emotions);
-            } else {
-                showError("No faces detected.");
-            }
-        }
-
-        function getEmotionColor(emotion) {
-            const colors = {
-                happy: '#4ade80',
-                sad: '#60a5fa',
-                angry: '#f87171',
-                fear: '#a78bfa',
-                surprise: '#fbbf24',
-                neutral: '#94a3b8',
-                disgust: '#2dd4bf'
-            };
-            return colors[emotion] || '#fff';
-        }
-
-        function updateChart(emotionsData) {
+        function updateChart(sortedData) {
             const ctx = document.getElementById('emotionChart').getContext('2d');
 
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+            if (chartInstance) chartInstance.destroy();
 
-            const labels = Object.keys(emotionsData).map(e => e.charAt(0).toUpperCase() + e.slice(1));
-            const data = Object.values(emotionsData).map(v => (v * 100).toFixed(1));
+            // Limit to top 5 for cleaner UI
+            const top5 = sortedData.slice(0, 5);
 
             chartInstance = new Chart(ctx, {
-                type: 'radar',
+                type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: top5.map(x => x[0].toUpperCase()),
                     datasets: [{
-                        label: 'Confidence (%)',
-                        data: data,
-                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                        borderColor: '#6366f1',
-                        pointBackgroundColor: '#ec4899',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: '#ec4899'
+                        data: top5.map(x => x[1]),
+                        backgroundColor: '#CCFF00',
+                        barThickness: 4,
+                        borderRadius: 2
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
                     scales: {
-                        r: {
-                            angleLines: { color: 'rgba(148, 163, 184, 0.1)' },
-                            grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                            pointLabels: {
-                                color: '#94a3b8',
-                                font: { size: 12, family: 'Outfit' }
-                            },
-                            ticks: { display: false, backdropColor: 'transparent' }
+                        x: {
+                            display: false,
+                            max: 1
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#fff',
+                                font: { family: '"JetBrains Mono", monospace' }
+                            }
                         }
                     },
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    maintainAspectRatio: false
+                    animation: { duration: 0 } // Instant tech feel
                 }
             });
         }
 
-        function resetApp() {
-            // Soft reset to ensure smoother UX
-            setLoading(false);
-
-            // 1. Reset UI Containers
-            results.style.display = 'none';
-            errorDiv.style.display = 'none';
-            emptyState.style.display = 'block';
-
-            // 2. Clear Data Displays
-            document.getElementById('processedImage').src = '';
-            document.getElementById('dominantEmotion').textContent = '-';
-
-            // 3. Reset Inputs
-            fileInput.value = '';
-
-            // 4. Reset Webcam State
-            stopWebcam();
-            startWebcamBtn.style.display = 'flex'; // Ensure visible
-            uploadArea.style.display = 'block';    // Ensure visible
-
-            // 5. Destroy Chart
-            if (chartInstance) {
-                chartInstance.destroy();
-                chartInstance = null;
+        // Helpers
+        function setLoading(bool) {
+            if (bool) {
+                els.loader.classList.remove('hidden');
+                setStatus('PROCESSING...', true);
+            } else {
+                els.loader.classList.add('hidden');
             }
         }
+
+        function setStatus(text, active) {
+            els.statusText.innerText = text;
+            if (active) els.statusDot.classList.add('active');
+            else els.statusDot.classList.remove('active');
+        }
+
+        function showError(msg) {
+            els.errorDiv.innerText = `ERR: ${msg}`;
+            els.errorDiv.classList.remove('hidden');
+            setStatus('ERROR', false);
+        }
+
+        function resetUI() {
+            els.processedImage.classList.add('hidden');
+            els.results.classList.remove('active');
+            els.errorDiv.classList.add('hidden');
+            els.emptyState.classList.remove('hidden');
+            if (chartInstance) chartInstance.destroy();
+            stopWebcam();
+        }
+
+        // Expose global for button
+        window.resetApp = resetUI;
+
     </script>
 </body>
 
