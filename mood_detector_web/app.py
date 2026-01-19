@@ -66,19 +66,25 @@ def softmax(x):
 
 def process_image(image_path):
     try:
+        print(f"[DEBUG] Starting process_image for: {image_path}")
         session, input_name = get_onnx_session()
+        print("[DEBUG] ONNX session loaded successfully")
         
         # Use OpenCV Haar Cascade (lightweight, reliable on Render)
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        print("[DEBUG] Haar cascade loaded")
         
         image = cv2.imread(image_path)
         if image is None:
+            print(f"[ERROR] Failed to read image: {image_path}")
             return None, "Invalid image file"
+        print(f"[DEBUG] Image loaded: shape={image.shape}")
 
         h, w, _ = image.shape
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
         faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        print(f"[DEBUG] Detected {len(faces)} faces")
 
         if len(faces) == 0:
             return None, "No face detected"
@@ -137,6 +143,9 @@ def process_image(image_path):
         return output, output_path
 
     except Exception as e:
+        import traceback
+        print(f"[ERROR] Exception in process_image: {str(e)}")
+        print(f"[ERROR] Traceback:\n{traceback.format_exc()}")
         return None, str(e)
 
 @app.route("/")
