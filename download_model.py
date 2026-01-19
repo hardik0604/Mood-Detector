@@ -1,20 +1,27 @@
-import requests
+#!/usr/bin/env python3
+"""Download the ONNX model if it doesn't exist."""
+import os
+import sys
+import urllib.request
 
-url = "https://github.com/onnx/models/raw/main/vision/body_analysis/emotion_ferplus/model/emotion-ferplus-8.onnx"
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+MODEL_URL = "https://github.com/onnx/models/raw/main/validated/vision/body_analysis/emotion_ferplus/model/emotion-ferplus-8.onnx"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "mood_detector_web", "emotion-ferplus-8.onnx")
 
-print(f"Downloading from {url}...")
-try:
-    response = requests.get(url, headers=headers, allow_redirects=True)
-    if response.status_code == 200:
-        # Check if it looks like HTML
-        if b'<!DOCTYPE html>' in response.content[:100]:
-            print("Failed: Downloaded content is HTML (likely 404 or auth page).")
-        else:
-            with open('emotion-ferplus-8.onnx', 'wb') as f:
-                f.write(response.content)
-            print(f"Success! Downloaded {len(response.content)} bytes.")
-    else:
-        print(f"Failed with status code: {response.status_code}")
-except Exception as e:
-    print(f"Error: {e}")
+def download_model():
+    if os.path.exists(MODEL_PATH):
+        print(f"✓ Model already exists at {MODEL_PATH}")
+        return True
+    
+    print(f"Downloading ONNX model from {MODEL_URL}...")
+    try:
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        size_mb = os.path.getsize(MODEL_PATH) / (1024 * 1024)
+        print(f"✓ Downloaded successfully ({size_mb:.1f}MB)")
+        return True
+    except Exception as e:
+        print(f"✗ Failed to download model: {e}", file=sys.stderr)
+        return False
+
+if __name__ == "__main__":
+    success = download_model()
+    sys.exit(0 if success else 1)
