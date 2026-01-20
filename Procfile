@@ -1,1 +1,1 @@
-web: bash -c "cd mood_detector_web && gunicorn app:app --bind 0.0.0.0:\$PORT --timeout 300 --workers 1 --threads 1 --worker-tmp-dir /dev/shm --max-requests 10 --max-requests-jitter 5 --worker-class sync"
+web: gunicorn mood_detector_web.app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1 --threads 1 --worker-tmp-dir /dev/shm --max-requests 10 --max-requests-jitter 5 --worker-class sync --chdir /opt/render/project/src
