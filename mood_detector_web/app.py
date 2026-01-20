@@ -8,9 +8,12 @@ import io
 import uuid
 from PIL import Image
 
+# =========================
+# BASIC APP SETUP
+# =========================
+
 app = Flask(__name__)
 
-# Ensure upload folder is absolute path relative to this file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 STATIC_FOLDER = os.path.join(BASE_DIR, "static")
@@ -21,8 +24,50 @@ os.makedirs(STATIC_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
-ORT_SESSION = None
-INPUT_NAME = None
+# =========================
+# PERFORMANCE / MEMORY FIXES
+# =========================
+
+# Prevent OpenCV from spawning threads (VERY IMPORTANT on Render)
+cv2.setNumThreads(1)
+
+# =========================
+# LOAD FACE DETECTOR ONCE
+# =========================
+
+FACE_CASCADE = cv2.CascadeClassifier(
+    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+)
+
+if FACE_CASCADE.empty():
+    raise RuntimeError("Failed to load Haar Cascade")
+
+# =========================
+# LOAD ONNX MODEL ONCE (PRELOAD)
+# =========================
+
+print("[BOOT] Loading ONNX emotion model...")
+
+MODEL_PATH = os.path.join(BASE_DIR, "emotion-ferplus-8.onnx")
+
+sess_options = ort.SessionOptions()
+sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
+sess_options.intra_op_num_threads = 1
+sess_options.inter_op_num_threads = 1
+
+ORT_SESSION = ort.InferenceSession(
+    MODEL_PATH,
+    providers=["CPUExecutionProvider"],
+    sess_options=sess_options
+)
+
+INPUT_NAME = ORT_SESSION.get_inputs()[0].name
+
+print("[BOOT] ONNX model loaded successfully")
+
+# =========================
+# CONSTANTS
+# =========================
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "bmp", "webp"}
 
@@ -48,121 +93,97 @@ EMOTION_TABLE = {
     "contempt": "disgust",
 }
 
-def get_onnx_session():
-    """Lazy load ONNX model only when needed to reduce memory footprint"""
-    global ORT_SESSION, INPUT_NAME
-    if ORT_SESSION is None:
-        print("[DEBUG] Loading ONNX model (lazy initialization)...")
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(base_dir, "emotion-ferplus-8.onnx")
-        
-        # Use session options to reduce memory usage
-        sess_options = ort.SessionOptions()
-        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
-        
-        ORT_SESSION = ort.InferenceSession(
-            model_path, 
-            providers=["CPUExecutionProvider"],
-            sess_options=sess_options
-        )
-        INPUT_NAME = ORT_SESSION.get_inputs()[0].name
-        print("[DEBUG] ONNX model loaded successfully")
-    return ORT_SESSION, INPUT_NAME
+# =========================
+# HELPERS
+# =========================
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / np.sum(e_x)
 
+
 def process_image(image_path):
-    try:
-        print(f"[DEBUG] Starting process_image for: {image_path}")
-        session, input_name = get_onnx_session()
-        print("[DEBUG] ONNX session loaded successfully")
-        
-        # Use OpenCV Haar Cascade (lightweight, reliable on Render)
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        print("[DEBUG] Haar cascade loaded")
-        
-        image = cv2.imread(image_path)
-        if image is None:
-            print(f"[ERROR] Failed to read image: {image_path}")
-            return None, "Invalid image file"
-        print(f"[DEBUG] Image loaded: shape={image.shape}")
+    image = cv2.imread(image_path)
+    if image is None:
+        return None, "Invalid image"
 
-        h, w, _ = image.shape
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        
-        faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-        print(f"[DEBUG] Detected {len(faces)} faces")
+    h, w, _ = image.shape
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        if len(faces) == 0:
-            return None, "No face detected"
+    faces = FACE_CASCADE.detectMultiScale(
+        gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+    )
 
-        output = []
+    if len(faces) == 0:
+        return None, "No face detected"
 
-        for (x, y, w_box, h_box) in faces:
-            pad_w = int(w_box * 0.20)
-            pad_h = int(h_box * 0.20)
-            
-            x1 = max(0, x - pad_w)
-            y1 = max(0, y - pad_h)
-            x2 = min(w, x + w_box + pad_w)
-            y2 = min(h, y + h_box + pad_h)
+    results = []
 
-            if x2 <= x1 or y2 <= y1:
-                continue
-            
-            face = image[y1:y2, x1:x2]
-            
-            if face.size == 0: 
-                continue
+    for (x, y, fw, fh) in faces:
+        pad_w = int(fw * 0.2)
+        pad_h = int(fh * 0.2)
 
-            gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
-            resized = cv2.resize(gray_face, (64, 64))
-            normalized = resized.astype(np.float32)
-            
-            input_tensor = normalized[np.newaxis, np.newaxis, :, :]
-            scores = session.run(None, {input_name: input_tensor})[0][0]
-            probs = softmax(scores)
+        x1 = max(0, x - pad_w)
+        y1 = max(0, y - pad_h)
+        x2 = min(w, x + fw + pad_w)
+        y2 = min(h, y + fh + pad_h)
 
-            emotions = {}
-            for i, score in enumerate(probs):
-                key = EMOTION_TABLE[EMOTION_KEYS[i]]
-                emotions[key] = max(emotions.get(key, 0), float(score))
+        face = image[y1:y2, x1:x2]
+        if face.size == 0:
+            continue
 
-            dominant = max(emotions, key=emotions.get)
-            confidence = emotions[dominant]
+        gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+        resized = cv2.resize(gray_face, (64, 64))
+        normalized = resized.astype(np.float32)
 
-            output.append({
-                "box": [int(x1), int(y1), int(x2-x1), int(y2-y1)],
-                "emotions": emotions
-            })
+        input_tensor = normalized[np.newaxis, np.newaxis, :, :]
+        scores = ORT_SESSION.run(None, {INPUT_NAME: input_tensor})[0][0]
+        probs = softmax(scores)
 
-            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 3)
-            
-            label = f"{dominant}: {confidence:.2f}"
-            cv2.putText(image, label, (x1, max(0, y1 - 10)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        emotions = {}
+        for i, score in enumerate(probs):
+            key = EMOTION_TABLE[EMOTION_KEYS[i]]
+            emotions[key] = max(emotions.get(key, 0), float(score))
 
-        output_path = os.path.join(app.config["UPLOAD_FOLDER"], f"processed_{os.path.basename(image_path)}")
+        dominant = max(emotions, key=emotions.get)
+        confidence = emotions[dominant]
 
-        if not cv2.imwrite(output_path, image):
-            return None, "Failed to save image"
+        results.append({
+            "box": [int(x1), int(y1), int(x2 - x1), int(y2 - y1)],
+            "emotions": emotions
+        })
 
-        return output, output_path
+        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        label = f"{dominant}: {confidence:.2f}"
+        cv2.putText(
+            image,
+            label,
+            (x1, max(0, y1 - 10)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (0, 0, 255),
+            2
+        )
 
-    except Exception as e:
-        import traceback
-        print(f"[ERROR] Exception in process_image: {str(e)}")
-        print(f"[ERROR] Traceback:\n{traceback.format_exc()}")
-        return None, str(e)
+    output_path = os.path.join(
+        UPLOAD_FOLDER, f"processed_{os.path.basename(image_path)}"
+    )
+    cv2.imwrite(output_path, image)
+
+    return results, output_path
+
+# =========================
+# ROUTES
+# =========================
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -174,7 +195,7 @@ def upload():
         return jsonify({"error": "Invalid file"}), 400
 
     filename = f"{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     file.save(filepath)
 
     data, result = process_image(filepath)
@@ -188,18 +209,19 @@ def upload():
         "emotions": data,
     })
 
+
 @app.route("/webcam", methods=["POST"])
 def webcam():
-    data = request.get_json()
-    if not data or "image" not in data:
+    payload = request.get_json()
+    if not payload or "image" not in payload:
         return jsonify({"error": "Invalid payload"}), 400
 
-    image_data = data["image"].split(",")[-1]
+    image_data = payload["image"].split(",")[-1]
     image_bytes = base64.b64decode(image_data)
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
     filename = f"webcam_{uuid.uuid4().hex}.jpg"
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     image.save(filepath)
 
     data, result = process_image(filepath)
@@ -212,26 +234,26 @@ def webcam():
         "emotions": data,
     })
 
+
 @app.route("/uploads/<filename>")
 def uploads(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
 
 @app.route("/favicon.ico")
 def favicon():
-    return "", 204  # No Content - prevents console errors
+    return "", 204
 
 
 @app.route("/health")
 def health():
-    """Health check endpoint - doesn't load model to save memory"""
-    return jsonify({"status": "ok", "message": "Service is running"}), 200
+    return jsonify({"status": "ok"}), 200
 
-@app.route("/warmup")
-def warmup():
-    get_onnx_session()
-    return "Warmed up"
 
+# =========================
+# LOCAL RUN
+# =========================
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)
