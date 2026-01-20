@@ -93,6 +93,80 @@ EMOTION_TABLE = {
     "contempt": "disgust",
 }
 
+# Song recommendations database
+SONG_RECOMMENDATIONS = {
+    'happy': [
+        {'title': 'Happy', 'artist': 'Pharrell Williams', 'genre': 'Pop'},
+        {'title': 'Good as Hell', 'artist': 'Lizzo', 'genre': 'Pop/R&B'},
+        {'title': "Can't Stop the Feeling!", 'artist': 'Justin Timberlake', 'genre': 'Pop'},
+        {'title': 'Walking on Sunshine', 'artist': 'Katrina and the Waves', 'genre': 'Rock'},
+        {'title': 'Uptown Funk', 'artist': 'Mark Ronson ft. Bruno Mars', 'genre': 'Funk/Pop'},
+    ],
+    'sad': [
+        {'title': 'Someone Like You', 'artist': 'Adele', 'genre': 'Pop/Soul'},
+        {'title': 'The Scientist', 'artist': 'Coldplay', 'genre': 'Alternative'},
+        {'title': 'Hurt', 'artist': 'Johnny Cash', 'genre': 'Country'},
+        {'title': 'The Sound of Silence', 'artist': 'Simon & Garfunkel', 'genre': 'Folk'},
+        {'title': 'Everybody Hurts', 'artist': 'R.E.M.', 'genre': 'Alternative Rock'},
+    ],
+    'angry': [
+        {'title': 'Break Stuff', 'artist': 'Limp Bizkit', 'genre': 'Nu Metal'},
+        {'title': 'Killing in the Name', 'artist': 'Rage Against the Machine', 'genre': 'Alternative Metal'},
+        {'title': 'Chop Suey!', 'artist': 'System of a Down', 'genre': 'Alternative Metal'},
+        {'title': 'Numb', 'artist': 'Linkin Park', 'genre': 'Nu Metal'},
+        {'title': 'Stronger', 'artist': 'Kelly Clarkson', 'genre': 'Pop Rock'},
+    ],
+    'fear': [
+        {'title': 'Brave', 'artist': 'Sara Bareilles', 'genre': 'Pop'},
+        {'title': 'Stronger (What Doesn\'t Kill You)', 'artist': 'Kelly Clarkson', 'genre': 'Pop'},
+        {'title': 'Fight Song', 'artist': 'Rachel Platten', 'genre': 'Pop'},
+        {'title': 'Titanium', 'artist': 'David Guetta ft. Sia', 'genre': 'Electronic/Pop'},
+        {'title': 'Eye of the Tiger', 'artist': 'Survivor', 'genre': 'Rock'},
+    ],
+    'surprise': [
+        {'title': 'Levitating', 'artist': 'Dua Lipa', 'genre': 'Pop'},
+        {'title': 'Blinding Lights', 'artist': 'The Weeknd', 'genre': 'Synth-pop'},
+        {'title': 'Shake It Off', 'artist': 'Taylor Swift', 'genre': 'Pop'},
+        {'title': 'Electric Feel', 'artist': 'MGMT', 'genre': 'Indie Pop'},
+        {'title': 'Mr. Blue Sky', 'artist': 'Electric Light Orchestra', 'genre': 'Rock'},
+    ],
+    'disgust': [
+        {'title': 'Confident', 'artist': 'Demi Lovato', 'genre': 'Pop'},
+        {'title': 'Roar', 'artist': 'Katy Perry', 'genre': 'Pop'},
+        {'title': 'Stronger', 'artist': 'Kelly Clarkson', 'genre': 'Pop Rock'},
+        {'title': 'Unstoppable', 'artist': 'Sia', 'genre': 'Pop'},
+        {'title': 'Rise Up', 'artist': 'Andra Day', 'genre': 'Soul'},
+    ],
+    'neutral': [
+        {'title': 'Weightless', 'artist': 'Marconi Union', 'genre': 'Ambient'},
+        {'title': 'Claire de Lune', 'artist': 'Claude Debussy', 'genre': 'Classical'},
+        {'title': 'River', 'artist': 'Joni Mitchell', 'genre': 'Folk'},
+        {'title': 'Holocene', 'artist': 'Bon Iver', 'genre': 'Indie Folk'},
+        {'title': 'The Night We Met', 'artist': 'Lord Huron', 'genre': 'Indie Folk'},
+    ]
+}
+
+def get_song_recommendations(emotion, num_songs=5):
+    """Get song recommendations based on detected emotion"""
+    import random
+    if emotion.lower() in SONG_RECOMMENDATIONS:
+        songs = SONG_RECOMMENDATIONS[emotion.lower()]
+        return random.sample(songs, min(num_songs, len(songs)))
+    return SONG_RECOMMENDATIONS.get('neutral', [])[:num_songs]
+
+def get_mood_description(emotion):
+    """Get a friendly description of the detected mood"""
+    descriptions = {
+        'happy': "You're radiating positivity! Here are some upbeat songs to keep your energy high.",
+        'sad': "Feeling a bit down? These songs might help you process your emotions or lift your spirits.",
+        'angry': "Feeling intense? These powerful songs can help you channel that energy.",
+        'fear': "Feeling anxious? These empowering songs can help you feel stronger and more confident.",
+        'surprise': "What a moment! Here are some energetic songs to match your surprise.",
+        'disgust': "Not feeling it? These empowering songs might help shift your mood.",
+        'neutral': "In a calm state? Here are some peaceful songs for your contemplative mood."
+    }
+    return descriptions.get(emotion.lower(), "Here are some songs that might match your current vibe.")
+
 # =========================
 # HELPERS
 # =========================
@@ -202,11 +276,25 @@ def upload():
     if data is None:
         return jsonify({"error": result}), 400
 
+    # Get dominant emotion for song recommendations
+    dominant_emotion = None
+    mood_description = ""
+    recommended_songs = []
+    
+    if data and len(data) > 0:
+        first_face_emotions = data[0]['emotions']
+        dominant_emotion = max(first_face_emotions, key=first_face_emotions.get)
+        mood_description = get_mood_description(dominant_emotion)
+        recommended_songs = get_song_recommendations(dominant_emotion)
+
     return jsonify({
         "success": True,
         "original_image": f"/uploads/{filename}",
         "processed_image": f"/uploads/{os.path.basename(result)}",
         "emotions": data,
+        "dominant_emotion": dominant_emotion,
+        "mood_description": mood_description,
+        "recommended_songs": recommended_songs,
     })
 
 
@@ -228,10 +316,24 @@ def webcam():
     if data is None:
         return jsonify({"error": result}), 400
 
+    # Get dominant emotion for song recommendations
+    dominant_emotion = None
+    mood_description = ""
+    recommended_songs = []
+    
+    if data and len(data) > 0:
+        first_face_emotions = data[0]['emotions']
+        dominant_emotion = max(first_face_emotions, key=first_face_emotions.get)
+        mood_description = get_mood_description(dominant_emotion)
+        recommended_songs = get_song_recommendations(dominant_emotion)
+
     return jsonify({
         "success": True,
         "processed_image": f"/uploads/{os.path.basename(result)}",
         "emotions": data,
+        "dominant_emotion": dominant_emotion,
+        "mood_description": mood_description,
+        "recommended_songs": recommended_songs,
     })
 
 
