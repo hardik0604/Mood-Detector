@@ -8,16 +8,26 @@
         content="AI-powered facial emotion detection and sentiment analysis using FER+ deep learning model. Analyze emotions in real-time or upload images.">
     <meta name="keywords" content="emotion detection, sentiment analysis, facial recognition, AI, machine learning">
     <title>MOOD.OS - AI Emotion Detection & Sentiment Analysis</title>
-    <!-- Fonts -->
+
+    <!-- Preconnect to CDNs for faster resource loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- Fonts - preload critical font -->
+    <link rel="preload"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        as="style">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-    <!-- Charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Icons - defer non-critical CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" media="print"
+        onload="this.media='all'">
+    <noscript>
+        <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    </noscript>>
 
     <style>
         :root {
@@ -29,7 +39,8 @@
             /* Acid Green/Yellow */
             --accent-dim: rgba(204, 255, 0, 0.1);
             --text: #ffffff;
-            --text-muted: #666666;
+            --text-muted: #999999;
+            /* Improved contrast from #666666 for accessibility */
 
             --font-ui: 'Inter', system-ui, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
@@ -543,9 +554,11 @@
                 <div class="chart-container">
                     <canvas id="emotionChart" role="img" aria-label="Emotion confidence distribution chart"></canvas>
                 </div>
-            </div>
         </main>
     </div>
+
+    <!-- Charts - Load asynchronously to avoid render blocking -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <script>
         // --- Technical Theme JS ---
