@@ -1,5 +1,6 @@
 # This is a redirect file for Render auto-detection
 # The real requirements are in mood_detector_web/requirements.txt
-# Please update your Render service to use render.yaml configuration
+# CRITICAL: Only install ONNX version, NOT DeepFace!
+# Cache buster: 2026-01-20-15:20
 
 -r mood_detector_web/requirements.txt
