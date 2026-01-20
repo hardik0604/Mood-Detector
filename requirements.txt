@@ -1,0 +1,5 @@
+# This is a redirect file for Render auto-detection
+# The real requirements are in mood_detector_web/requirements.txt
+# Please update your Render service to use render.yaml configuration
+
+-r mood_detector_web/requirements.txt
