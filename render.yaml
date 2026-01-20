@@ -4,5 +4,6 @@ services:
     env: python
     rootDir: mood_detector_web
     buildCommand: pip cache purge && pip install --no-cache-dir -r requirements.txt && python ../download_model.py
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1
+    healthCheckPath: /health
     plan: free
