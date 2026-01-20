@@ -2,8 +2,7 @@ services:
   - type: web
     name: mood-detector
     env: python
-    rootDir: mood_detector_web
-    buildCommand: pip cache purge && pip install --no-cache-dir -r requirements.txt && python ../download_model.py
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1 --threads 1 --worker-tmp-dir /dev/shm --max-requests 10 --max-requests-jitter 5 --worker-class sync
+    buildCommand: cd mood_detector_web && pip cache purge && pip install --no-cache-dir -r requirements.txt && cd .. && python download_model.py
+    startCommand: cd mood_detector_web && gunicorn app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1 --threads 1 --worker-tmp-dir /dev/shm --max-requests 10 --max-requests-jitter 5 --worker-class sync
     healthCheckPath: /health
     plan: free
