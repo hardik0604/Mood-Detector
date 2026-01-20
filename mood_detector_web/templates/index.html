@@ -438,6 +438,53 @@
             display: block;
             opacity: 0.5;
         }
+
+        /* Song Recommendations */
+        .song-recommendations {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .song-item {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .song-item:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .song-info {
+            flex: 1;
+        }
+
+        .song-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .song-artist {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .song-genre {
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--accent);
+            text-transform: uppercase;
+            padding: 0.2rem 0.5rem;
+            background: var(--accent-dim);
+            border-radius: 2px;
+        }
     </style>
 </head>
 
@@ -554,6 +601,14 @@
                 <div class="chart-container">
                     <canvas id="emotionChart" role="img" aria-label="Emotion confidence distribution chart"></canvas>
                 </div>
+
+                <div class="song-recommendations" id="songRecommendations" style="display: none;">
+                    <span class="mono-label">Music Recommendations</span>
+                    <div id="moodDescription" style="margin: 0.5rem 0; font-size: 0.9rem; color: var(--text);"></div>
+                    <div id="songList" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem;">
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -735,6 +790,31 @@
 
                 updateChart(sorted);
             }
+
+            // Display song recommendations
+            if (data.recommended_songs && data.recommended_songs.length > 0) {
+                const songRecs = document.getElementById('songRecommendations');
+                const moodDesc = document.getElementById('moodDescription');
+                const songList = document.getElementById('songList');
+
+                moodDesc.textContent = data.mood_description || '';
+
+                songList.innerHTML = '';
+                data.recommended_songs.forEach(song => {
+                    const songItem = document.createElement('div');
+                    songItem.className = 'song-item';
+                    songItem.innerHTML = `
+                        <div class="song-info">
+                            <div class="song-title">${song.title}</div>
+                            <div class="song-artist">${song.artist}</div>
+                        </div>
+                        <div class="song-genre">${song.genre}</div>
+                    `;
+                    songList.appendChild(songItem);
+                });
+
+                songRecs.style.display = 'block';
+            }
         }
 
         function updateChart(sortedData) {
@@ -817,6 +897,9 @@
             els.emptyState.classList.add('fade-in');
             if (chartInstance) chartInstance.destroy();
             stopWebcam();
+
+            // Hide song recommendations
+            document.getElementById('songRecommendations').style.display = 'none';
 
             // Reset file input
             els.fileInput.value = '';
