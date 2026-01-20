@@ -49,12 +49,24 @@ EMOTION_TABLE = {
 }
 
 def get_onnx_session():
+    """Lazy load ONNX model only when needed to reduce memory footprint"""
     global ORT_SESSION, INPUT_NAME
     if ORT_SESSION is None:
+        print("[DEBUG] Loading ONNX model (lazy initialization)...")
         base_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(base_dir, "emotion-ferplus-8.onnx")
-        ORT_SESSION = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        
+        # Use session options to reduce memory usage
+        sess_options = ort.SessionOptions()
+        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
+        
+        ORT_SESSION = ort.InferenceSession(
+            model_path, 
+            providers=["CPUExecutionProvider"],
+            sess_options=sess_options
+        )
         INPUT_NAME = ORT_SESSION.get_inputs()[0].name
+        print("[DEBUG] ONNX model loaded successfully")
     return ORT_SESSION, INPUT_NAME
 
 def allowed_file(filename):
@@ -211,11 +223,8 @@ def favicon():
 
 @app.route("/health")
 def health():
-    try:
-        get_onnx_session()
-        return jsonify({"status": "ok", "model": "loaded"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "error": str(e)}), 500
+    """Health check endpoint - doesn't load model to save memory"""
+    return jsonify({"status": "ok", "message": "Service is running"}), 200
 
 @app.route("/warmup")
 def warmup():
