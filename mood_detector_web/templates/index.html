@@ -4,37 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+
     <meta name="description"
-        content="Discover your emotions through AI-powered facial expression analysis. Upload a photo or use your camera for instant mood detection with music recommendations.">
-    <meta name="app-version" content="2.1.0">
+        content="Discover your emotions through AI-powered facial expression analysis with music recommendations.">
+
     <title>MOOD — Emotion Detection</title>
 
-    <!-- Cache Buster Script -->
+    <!-- VERSION CHECK -->
     <script>
-        const APP_VERSION = '2.1.0';
-        const savedVersion = localStorage.getItem('appVersion');
-        if (savedVersion && savedVersion !== APP_VERSION) {
+        const APP_VERSION = '2.1.1';
+        if (localStorage.getItem('appVersion') !== APP_VERSION) {
             localStorage.setItem('appVersion', APP_VERSION);
-            location.reload(true); // Hard reload on version change
-        } else {
-            localStorage.setItem('appVersion', APP_VERSION);
+            location.reload();
         }
     </script>
 
     <style>
-        /* RESET */
+        /* ========== RESET ========== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* SF PRO INSPIRED */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
+        /* ========== THEME VARIABLES ========== */
         :root {
             --bg: #f5f5f7;
             --text: #1d1d1f;
@@ -42,102 +39,90 @@
             --card-bg: #ffffff;
             --accent: #0071e3;
             --accent-hover: #0077ed;
-            --border: rgba(0, 0, 0, 0.1);
-            --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 4px 32px rgba(0, 0, 0, 0.12);
+            --border: rgba(0, 0, 0, .12);
+            --shadow: 0 2px 16px rgba(0, 0, 0, .08);
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #000000;
-                --text: #f5f5f7;
-                --text-secondary: #86868b;
-                --card-bg: #1d1d1f;
-                --accent: #0a84ff;
-                --accent-hover: #409cff;
-                --border: rgba(255, 255, 255, 0.15);
-                --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
-                --shadow-lg: 0 4px 32px rgba(0, 0, 0, 0.6);
-            }
+        body.dark-mode {
+            --bg: #000;
+            --text: #f5f5f7;
+            --text-secondary: #86868b;
+            --card-bg: #1d1d1f;
+            --accent: #0a84ff;
+            --accent-hover: #409cff;
+            --border: rgba(255, 255, 255, .15);
+            --shadow: 0 2px 16px rgba(0, 0, 0, .5);
         }
 
+        /* ========== BASE ========== */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, Inter, Helvetica, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            transition: background .3s, color .3s;
         }
 
-        /* LAYOUT */
         .container {
             max-width: 980px;
-            margin: 0 auto;
-            padding: 0 20px;
+            margin: auto;
+            padding: 20px;
         }
 
-        /* HEADER */
+        /* ========== HEADER ========== */
         header {
-            padding: 44px 0 20px;
             text-align: center;
+            padding: 32px 0 20px;
         }
 
         .logo {
-            font-size: 56px;
+            font-size: 44px;
             font-weight: 700;
-            letter-spacing: -0.03em;
             background: linear-gradient(135deg, var(--accent), #5e5ce6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 12px;
         }
 
         .tagline {
-            font-size: 21px;
-            font-weight: 400;
+            font-size: 18px;
             color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-top: 6px;
         }
 
         .status {
             font-size: 14px;
             color: var(--text-secondary);
-            font-weight: 500;
+            margin-top: 8px;
         }
 
-        /* THEME TOGGLE */
         .theme-toggle {
             display: flex;
+            justify-content: center;
             align-items: center;
             gap: 12px;
-            margin-top: 16px;
+            margin-top: 14px;
         }
 
         .toggle-btn {
-            position: relative;
-            width: 51px;
-            height: 31px;
+            width: 52px;
+            height: 32px;
             background: var(--border);
-            border-radius: 31px;
-            cursor: pointer;
-            transition: background 0.3s ease;
+            border-radius: 999px;
             border: none;
-            padding: 0;
+            cursor: pointer;
+            position: relative;
         }
 
         .toggle-btn::before {
             content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 27px;
-            height: 27px;
-            background: white;
+            width: 26px;
+            height: 26px;
+            background: #fff;
             border-radius: 50%;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: transform .3s;
         }
 
         body.dark-mode .toggle-btn {
@@ -150,86 +135,44 @@
 
         .toggle-label {
             font-size: 20px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            transition: transform 0.3s ease;
+            cursor: pointer;
         }
 
-        .toggle-label:hover {
-            transform: scale(1.1);
-        }
-
-        /* DARK MODE THEME */
-        body.dark-mode {
-            --bg: #000000;
-            --text: #f5f5f7;
-            --text-secondary: #86868b;
-            --card-bg: #1d1d1f;
-            --accent: #0a84ff;
-            --accent-hover: #409cff;
-            --border: rgba(255, 255, 255, 0.15);
-            --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 4px 32px rgba(0, 0, 0, 0.6);
-        }
-
-        /* SMOOTH TRANSITIONS */
-        body {
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .card,
-        .upload-area,
-        .btn-secondary {
-            transition: all 0.3s ease;
-        }
-
-        /* MAIN */
-        main {
-            margin-top: 60px;
-        }
-
-        /* CARD */
+        /* ========== CARDS ========== */
         .card {
             background: var(--card-bg);
             border-radius: 18px;
             box-shadow: var(--shadow);
-            padding: 40px;
-            margin-bottom: 20px;
             border: 1px solid var(--border);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 28px;
+            margin-bottom: 20px;
         }
 
-        .card:hover {
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* UPLOAD */
+        /* ========== UPLOAD ========== */
         .upload-area {
             border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 60px 40px;
+            border-radius: 14px;
+            padding: 44px 24px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: var(--bg);
         }
 
         .upload-area:hover {
             border-color: var(--accent);
-            background: rgba(0, 113, 227, 0.04);
+        }
+
+        .upload-area:focus {
+            outline: 2px solid var(--accent);
         }
 
         .upload-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.6;
+            font-size: 40px;
+            opacity: .6;
         }
 
         .upload-title {
-            font-size: 17px;
             font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text);
+            margin-top: 12px;
         }
 
         .upload-subtitle {
@@ -237,70 +180,46 @@
             color: var(--text-secondary);
         }
 
-        /* BUTTONS */
+        /* ========== BUTTONS ========== */
         .btn-group {
             display: grid;
-            grid-template-columns: 1fr 1fr;
             gap: 12px;
             margin-top: 20px;
         }
 
         .btn {
-            padding: 14px 24px;
-            border-radius: 980px;
-            font-size: 15px;
+            padding: 14px;
+            border-radius: 999px;
             font-weight: 600;
             border: none;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
         }
 
         .btn-primary {
             background: var(--accent);
-            color: white;
+            color: #fff;
         }
 
         .btn-primary:hover {
             background: var(--accent-hover);
-            transform: scale(1.02);
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
         }
 
         .btn-secondary {
             background: transparent;
+            border: 1px solid var(--border);
             color: var(--accent);
-            border: 1.5px solid var(--border);
         }
 
-        .btn-secondary:hover {
-            background: rgba(0, 113, 227, 0.06);
-        }
-
-        /* CAMERA */
-        #cameraContainer {
-            margin-top: 20px;
-        }
-
-        .video-preview {
-            width: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 12px;
-        }
-
+        /* ========== CAMERA ========== */
         .video-preview video {
             width: 100%;
-            display: block;
+            border-radius: 12px;
             transform: scaleX(-1);
         }
 
-        /* RESULT */
+        /* ========== RESULT ========== */
         .result-container {
-            min-height: 400px;
+            min-height: 320px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -309,113 +228,60 @@
         .placeholder {
             text-align: center;
             color: var(--text-secondary);
-            font-size: 17px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .result-content {
-            width: 100%;
         }
 
         .result-image {
             width: 100%;
             border-radius: 12px;
-            margin-bottom: 32px;
-            box-shadow: var(--shadow);
-        }
-
-        .emotion-display {
-            margin-bottom: 32px;
-        }
-
-        .emotion-label {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-bottom: 24px;
         }
 
         .emotion-value {
-            font-size: 48px;
+            font-size: 42px;
             font-weight: 700;
-            letter-spacing: -0.02em;
             background: linear-gradient(135deg, var(--accent), #5e5ce6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-transform: capitalize;
-            margin-bottom: 12px;
         }
 
         .confidence-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            background: rgba(0, 113, 227, 0.1);
-            border-radius: 100px;
             font-size: 13px;
             font-weight: 600;
             color: var(--accent);
         }
 
         .description {
-            font-size: 17px;
-            line-height: 1.6;
             color: var(--text-secondary);
-            margin-top: 16px;
+            margin-top: 12px;
         }
 
-        /* MUSIC */
+        /* ========== MUSIC ========== */
         .music-section {
-            margin-top: 40px;
-            padding-top: 32px;
+            margin-top: 28px;
+            padding-top: 20px;
             border-top: 1px solid var(--border);
         }
 
-        .section-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .song-list {
-            display: grid;
-            gap: 8px;
-        }
-
         .song-item {
-            padding: 12px 16px;
-            background: var(--bg);
+            padding: 10px 12px;
             border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .song-item:hover {
-            background: rgba(0, 113, 227, 0.06);
         }
 
         .song-item a {
             color: var(--text);
             text-decoration: none;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .song-item a:hover {
             color: var(--accent);
         }
 
-        /* LOADER */
+        /* ========== LOADER ========== */
         .loader {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(0, 0, 0, .3);
+            backdrop-filter: blur(14px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -426,143 +292,80 @@
             display: flex;
         }
 
-        .loader-content {
+        .loader-box {
             background: var(--card-bg);
-            padding: 40px 60px;
+            padding: 32px 40px;
             border-radius: 20px;
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow);
             text-align: center;
         }
 
         .spinner {
-            width: 44px;
-            height: 44px;
-            border: 3px solid rgba(0, 113, 227, 0.2);
+            width: 42px;
+            height: 42px;
+            border: 3px solid rgba(0, 113, 227, .2);
             border-top-color: var(--accent);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        .loader-text {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--text-secondary);
+            animation: spin .8s linear infinite;
+            margin: auto auto 16px;
         }
 
         @keyframes spin {
             to {
-                transform: rotate(360deg);
+                transform: rotate(360deg)
             }
         }
 
-        /* UTILITIES */
         .hidden {
             display: none !important;
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 734px) {
-            .logo {
-                font-size: 40px;
-            }
-
-            .tagline {
-                font-size: 17px;
-            }
-
-            .card {
-                padding: 24px 20px;
-            }
-
-            .upload-area {
-                padding: 40px 24px;
-            }
-
+        /* ========== RESPONSIVE ========== */
+        @media (min-width:768px) {
             .btn-group {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
             }
 
-            .emotion-value {
-                font-size: 40px;
-            }
-
-            .section-title {
-                font-size: 19px;
-            }
-
-            header {
-                padding: 24px 0 12px;
-            }
-
-            main {
-                margin-top: 32px;
-            }
-        }
-
-        /* ANIMATIONS */
-        .fade-in {
-            animation: fadeIn 0.6s ease;
-        }
-
-        .slide-up {
-            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .logo {
+                font-size: 52px;
             }
         }
     </style>
 </head>
 
 <body>
+
     <!-- LOADER -->
     <div class="loader" id="loader">
-        <div class="loader-content">
+        <div class="loader-box">
             <div class="spinner"></div>
-            <div class="loader-text">Analyzing your expression</div>
+            <div>Analyzing expression</div>
         </div>
     </div>
 
     <div class="container">
-        <!-- HEADER -->
+
         <header>
             <h1 class="logo">MOOD</h1>
             <p class="tagline">Discover your emotions through AI</p>
+
             <div class="theme-toggle">
                 <span class="toggle-label" id="themeLabel">☀️</span>
-                <button class="toggle-btn" id="themeToggle" aria-label="Toggle theme"></button>
+                <button class="toggle-btn" id="themeToggle"></button>
             </div>
+
             <p class="status" id="status">Ready to analyze</p>
         </header>
 
-        <!-- MAIN -->
         <main>
-            <!-- INPUT CARD -->
-            <div class="card fade-in">
-                <div class="upload-area" id="uploadZone">
+
+            <!-- INPUT -->
+            <div class="card">
+                <div class="upload-area" id="uploadZone" tabindex="0" role="button">
                     <div class="upload-icon">📸</div>
                     <div class="upload-title">Upload a photo</div>
                     <div class="upload-subtitle">or drag and drop</div>
-                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <input type="file" id="fileInput" hidden>
                 </div>
 
                 <div id="cameraContainer" class="hidden">
@@ -576,35 +379,30 @@
                     <button class="btn btn-secondary" id="reset">Start Over</button>
                 </div>
 
-                <button class="btn btn-primary hidden" id="captureBtn" style="width:100%;margin-top:12px">Capture
-                    Photo</button>
+                <button class="btn btn-primary hidden" id="captureBtn" style="margin-top:12px">Capture Photo</button>
             </div>
 
-            <!-- RESULT CARD -->
-            <div class="card slide-up">
+            <!-- RESULT -->
+            <div class="card">
                 <div class="result-container">
                     <div class="placeholder" id="placeholder">
-                        <p>Upload a photo or use your camera to discover<br>the emotions captured in your expression.
-                        </p>
+                        Upload a photo or use your camera to begin.
                     </div>
 
-                    <div id="result" class="result-content hidden">
-                        <img id="resultImage" class="result-image" alt="Result">
+                    <div id="result" class="hidden">
+                        <img id="resultImage" class="result-image">
+                        <div class="emotion-value" id="emotion"></div>
+                        <div class="confidence-badge" id="confidence"></div>
+                        <p class="description" id="description"></p>
 
-                        <div class="emotion-display">
-                            <div class="emotion-label">Detected Emotion</div>
-                            <div class="emotion-value" id="emotion">—</div>
-                            <span class="confidence-badge" id="confidence">—</span>
-                            <p class="description" id="description"></p>
-                        </div>
-
-                        <div class="music-section" id="musicSection" style="display:none">
-                            <h3 class="section-title">Music for your mood</h3>
-                            <div class="song-list" id="songList"></div>
+                        <div class="music-section hidden" id="musicSection">
+                            <h3>Music for your mood</h3>
+                            <div id="songList"></div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </main>
     </div>
 
@@ -613,91 +411,54 @@
         let webcamStream = null;
 
         const $ = id => document.getElementById(id);
-        const loader = $('loader');
-        const status = $('status');
-        const uploadZone = $('uploadZone');
-        const fileInput = $('fileInput');
-        const cameraContainer = $('cameraContainer');
-        const webcamVideo = $('webcamVideo');
-        const captureBtn = $('captureBtn');
-        const startCamBtn = $('startCam');
-        const placeholder = $('placeholder');
-        const result = $('result');
-        const resultImage = $('resultImage');
-        const emotion = $('emotion');
-        const description = $('description');
-        const confidence = $('confidence');
-        const musicSection = $('musicSection');
-        const songList = $('songList');
-        const themeToggle = $('themeToggle');
-        const themeLabel = $('themeLabel');
+        const loader = $('loader'), status = $('status'), uploadZone = $('uploadZone'),
+            fileInput = $('fileInput'), cameraContainer = $('cameraContainer'),
+            webcamVideo = $('webcamVideo'), captureBtn = $('captureBtn'),
+            startCamBtn = $('startCam'), placeholder = $('placeholder'),
+            result = $('result'), resultImage = $('resultImage'),
+            emotion = $('emotion'), description = $('description'),
+            confidence = $('confidence'), musicSection = $('musicSection'),
+            songList = $('songList'), themeToggle = $('themeToggle'), themeLabel = $('themeLabel');
 
-        // Theme Toggle - works on both icon and button
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
+        /* THEME */
+        if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
             themeLabel.textContent = '🌙';
         }
-
         const toggleTheme = () => {
             document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            themeLabel.textContent = isDark ? '🌙' : '☀️';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            const dark = document.body.classList.contains('dark-mode');
+            themeLabel.textContent = dark ? '🌙' : '☀️';
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
         };
+        themeToggle.onclick = themeLabel.onclick = toggleTheme;
 
-        themeToggle.onclick = toggleTheme;
-        themeLabel.onclick = toggleTheme;
-        themeLabel.style.cursor = 'pointer';
-
+        /* LOADING */
         const setLoading = v => {
             loader.classList.toggle('active', v);
-            status.textContent = v ? 'Processing...' : 'Ready to analyze';
+            status.textContent = v ? 'Processing…' : 'Ready to analyze';
         };
 
+        /* UPLOAD */
         uploadZone.onclick = () => fileInput.click();
-
-        uploadZone.ondragover = e => {
-            e.preventDefault();
-            uploadZone.style.borderColor = 'var(--accent)';
+        uploadZone.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') fileInput.click();
         };
 
-        uploadZone.ondragleave = () => {
-            uploadZone.style.borderColor = '';
-        };
-
-        uploadZone.ondrop = e => {
-            e.preventDefault();
-            uploadZone.style.borderColor = '';
-            if (e.dataTransfer.files[0]) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        };
-
-        fileInput.onchange = () => {
-            if (fileInput.files[0]) handleFile(fileInput.files[0]);
-        };
+        fileInput.onchange = () => fileInput.files[0] && handleFile(fileInput.files[0]);
 
         async function handleFile(file) {
             setLoading(true);
-            const fd = new FormData();
-            fd.append('file', file);
-            try {
-                const res = await fetch(API + '/upload', { method: 'POST', body: fd });
-                const data = await res.json();
-                setLoading(false);
-                showResult(data);
-            } catch (err) {
-                setLoading(false);
-                alert('Error processing image');
-            }
+            const fd = new FormData(); fd.append('file', file);
+            const res = await fetch(API + '/upload', { method: 'POST', body: fd });
+            const data = await res.json();
+            setLoading(false);
+            showResult(data);
         }
 
+        /* CAMERA */
         startCamBtn.onclick = async () => {
-            if (webcamStream) {
-                stopCamera();
-                return;
-            }
+            if (webcamStream) { stopCamera(); return; }
             try {
                 webcamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
                 webcamVideo.srcObject = webcamStream;
@@ -707,40 +468,34 @@
                 startCamBtn.textContent = 'Stop Camera';
                 startCamBtn.classList.replace('btn-primary', 'btn-secondary');
             } catch {
+                captureBtn.classList.add('hidden');
                 alert('Camera access denied');
             }
         };
 
         captureBtn.onclick = async () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = webcamVideo.videoWidth;
-            canvas.height = webcamVideo.videoHeight;
-            const ctx = canvas.getContext('2d');
+            const c = document.createElement('canvas');
+            c.width = webcamVideo.videoWidth;
+            c.height = webcamVideo.videoHeight;
+            const ctx = c.getContext('2d');
             ctx.scale(-1, 1);
-            ctx.drawImage(webcamVideo, -canvas.width, 0, canvas.width, canvas.height);
+            ctx.drawImage(webcamVideo, -c.width, 0, c.width, c.height);
 
             setLoading(true);
-            try {
-                const res = await fetch(API + '/webcam', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: canvas.toDataURL('image/jpeg', 0.95) })
-                });
-                const data = await res.json();
-                setLoading(false);
-                stopCamera();
-                showResult(data);
-            } catch {
-                setLoading(false);
-                alert('Error capturing photo');
-            }
+            const res = await fetch(API + '/webcam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: c.toDataURL('image/jpeg', 0.95) })
+            });
+            const data = await res.json();
+            setLoading(false);
+            stopCamera();
+            showResult(data);
         };
 
         function stopCamera() {
-            if (webcamStream) {
-                webcamStream.getTracks().forEach(t => t.stop());
-                webcamStream = null;
-            }
+            webcamStream?.getTracks().forEach(t => t.stop());
+            webcamStream = null;
             webcamVideo.srcObject = null;
             cameraContainer.classList.add('hidden');
             uploadZone.classList.remove('hidden');
@@ -749,6 +504,7 @@
             startCamBtn.classList.replace('btn-secondary', 'btn-primary');
         }
 
+        /* RESULT */
         function showResult(data) {
             placeholder.classList.add('hidden');
             result.classList.remove('hidden');
@@ -756,24 +512,27 @@
             resultImage.src = data.image;
             emotion.textContent = data.insight.emotion;
             description.textContent = data.insight.description;
-            confidence.textContent = data.insight.confidence.toUpperCase() + ' CONFIDENCE';
+            confidence.textContent = (data.insight.confidence || '').toUpperCase() + ' CONFIDENCE';
 
-            if (data.songs && data.songs.length) {
-                musicSection.style.display = 'block';
-                songList.innerHTML = '';
+            musicSection.classList.add('hidden');
+            songList.innerHTML = '';
+
+            if (data.songs?.length) {
+                musicSection.classList.remove('hidden');
                 data.songs.forEach(s => {
-                    const div = document.createElement('div');
-                    div.className = 'song-item';
-                    div.innerHTML = `<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(s.title + ' ' + s.artist)}" target="_blank">
-                        <span>🎵</span> <span>${s.title} — ${s.artist}</span>
-                    </a>`;
-                    songList.appendChild(div);
+                    const d = document.createElement('div');
+                    d.className = 'song-item';
+                    d.innerHTML = `🎵 <a target="_blank" href="https://www.youtube.com/results?search_query=${encodeURIComponent(s.title + ' ' + s.artist)}">
+        ${s.title} — ${s.artist}
+      </a>`;
+                    songList.appendChild(d);
                 });
             }
         }
 
         $('reset').onclick = () => location.reload();
     </script>
+
 </body>
 
 </html>
