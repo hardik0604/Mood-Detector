@@ -91,6 +91,77 @@
             font-weight: 500;
         }
 
+        /* THEME TOGGLE */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .toggle-btn {
+            position: relative;
+            width: 51px;
+            height: 31px;
+            background: var(--border);
+            border-radius: 31px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border: none;
+            padding: 0;
+        }
+
+        .toggle-btn::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 27px;
+            height: 27px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .toggle-btn {
+            background: var(--accent);
+        }
+
+        body.dark-mode .toggle-btn::before {
+            transform: translateX(20px);
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* DARK MODE THEME */
+        body.dark-mode {
+            --bg: #000000;
+            --text: #f5f5f7;
+            --text-secondary: #86868b;
+            --card-bg: #1d1d1f;
+            --accent: #0a84ff;
+            --accent-hover: #409cff;
+            --border: rgba(255, 255, 255, 0.15);
+            --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 4px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        /* SMOOTH TRANSITIONS */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .card,
+        .upload-area,
+        .btn-secondary {
+            transition: all 0.3s ease;
+        }
+
         /* MAIN */
         main {
             margin-top: 60px;
@@ -455,6 +526,10 @@
         <header>
             <h1 class="logo">MOOD</h1>
             <p class="tagline">Discover your emotions through AI</p>
+            <div class="theme-toggle">
+                <span class="toggle-label" id="themeLabel">Light</span>
+                <button class="toggle-btn" id="themeToggle" aria-label="Toggle theme"></button>
+            </div>
             <p class="status" id="status">Ready to analyze</p>
         </header>
 
@@ -533,6 +608,22 @@
         const confidence = $('confidence');
         const musicSection = $('musicSection');
         const songList = $('songList');
+        const themeToggle = $('themeToggle');
+        const themeLabel = $('themeLabel');
+
+        // Theme Toggle
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeLabel.textContent = 'Dark';
+        }
+
+        themeToggle.onclick = () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeLabel.textContent = isDark ? 'Dark' : 'Light';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        };
 
         const setLoading = v => {
             loader.classList.toggle('active', v);
