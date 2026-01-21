@@ -133,9 +133,14 @@
         }
 
         .toggle-label {
-            font-size: 14px;
+            font-size: 20px;
             color: var(--text-secondary);
             font-weight: 500;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-label:hover {
+            transform: scale(1.1);
         }
 
         /* DARK MODE THEME */
@@ -527,7 +532,7 @@
             <h1 class="logo">MOOD</h1>
             <p class="tagline">Discover your emotions through AI</p>
             <div class="theme-toggle">
-                <span class="toggle-label" id="themeLabel">Light</span>
+                <span class="toggle-label" id="themeLabel">☀️</span>
                 <button class="toggle-btn" id="themeToggle" aria-label="Toggle theme"></button>
             </div>
             <p class="status" id="status">Ready to analyze</p>
@@ -615,13 +620,13 @@
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-mode');
-            themeLabel.textContent = 'Dark';
+            themeLabel.textContent = '🌙';
         }
 
         themeToggle.onclick = () => {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
-            themeLabel.textContent = isDark ? 'Dark' : 'Light';
+            themeLabel.textContent = isDark ? '🌙' : '☀️';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         };
 
