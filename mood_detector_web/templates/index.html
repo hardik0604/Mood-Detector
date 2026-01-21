@@ -616,19 +616,23 @@
         const themeToggle = $('themeToggle');
         const themeLabel = $('themeLabel');
 
-        // Theme Toggle
+        // Theme Toggle - works on both icon and button
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-mode');
             themeLabel.textContent = '🌙';
         }
 
-        themeToggle.onclick = () => {
+        const toggleTheme = () => {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             themeLabel.textContent = isDark ? '🌙' : '☀️';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         };
+
+        themeToggle.onclick = toggleTheme;
+        themeLabel.onclick = toggleTheme;
+        themeLabel.style.cursor = 'pointer';
 
         const setLoading = v => {
             loader.classList.toggle('active', v);
