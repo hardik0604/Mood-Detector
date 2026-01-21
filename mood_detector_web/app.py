@@ -1,17 +1,18 @@
-from flask import Flask, request, render_template, jsonify, send_from_directory
-import os, cv2, uuid, base64, io
+from flask import Flask, request, render_template, jsonify, send_from_directory, make_response
+import os, cv2, uuid, base64, io, time
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
 
 app = Flask(__name__)
 
-# Prevent browser caching
+# Aggressive cache prevention
 @app.after_request
 def add_header(response):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '-1'
+    response.headers['Expires'] = '0'
+    response.headers['ETag'] = str(time.time())  # Unique ETag for each request
     return response
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
