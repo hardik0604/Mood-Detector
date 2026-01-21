@@ -4,359 +4,658 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MOOD.OS</title>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap"
-        rel="stylesheet">
+    <title>MOOD — Emotion Detection</title>
 
     <style>
-        /* ================= RESET ================= */
+        /* RESET */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* SF PRO INSPIRED */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg: #f5f5f7;
+            --text: #1d1d1f;
+            --text-secondary: #86868b;
+            --card-bg: #ffffff;
+            --accent: #0071e3;
+            --accent-hover: #0077ed;
+            --border: rgba(0, 0, 0, 0.1);
+            --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 4px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #000000;
+                --text: #f5f5f7;
+                --text-secondary: #86868b;
+                --card-bg: #1d1d1f;
+                --accent: #0a84ff;
+                --accent-hover: #409cff;
+                --border: rgba(255, 255, 255, 0.15);
+                --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 4px 32px rgba(0, 0, 0, 0.6);
+            }
+        }
+
         body {
-            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
-            color: #fff;
-            font-family: Inter, sans-serif;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ================= LAYOUT ================= */
+        /* LAYOUT */
         .container {
-            max-width: 1200px;
-            margin: auto;
-            padding: 1.25rem;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
 
-        /* ================= HEADER ================= */
+        /* HEADER */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 44px 0 20px;
+            text-align: center;
         }
 
         .logo {
-            font-family: Space Grotesk;
-            font-size: 1.6rem;
-        }
-
-        .logo span {
-            background: linear-gradient(135deg, #00ff88, #00ccff);
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--accent), #5e5ce6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            font-size: 21px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
         }
 
         .status {
-            font-size: .8rem;
-            color: #aaa;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
-        /* ================= GRID (MOBILE FIRST) ================= */
-        .grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            margin-top: 1.5rem;
+        /* MAIN */
+        main {
+            margin-top: 60px;
         }
 
-        /* ================= CARDS ================= */
-        .card,
-        .result-area {
-            background: rgba(255, 255, 255, .03);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 20px;
-            padding: 1.5rem;
+        /* CARD */
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ================= UPLOAD ================= */
-        .upload-zone {
-            border: 2px dashed rgba(255, 255, 255, .25);
-            border-radius: 14px;
-            padding: 2.5rem 1.5rem;
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* UPLOAD */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 60px 40px;
             text-align: center;
             cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg);
         }
 
-        .upload-zone:hover {
-            border-color: #00ff88;
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(0, 113, 227, 0.04);
         }
 
-        /* ================= BUTTONS ================= */
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            margin-top: .75rem;
-            border-radius: 12px;
-            border: none;
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .upload-title {
+            font-size: 17px;
             font-weight: 600;
-            font-size: .95rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .upload-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* BUTTONS */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 980px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
             cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
 
-        .primary {
-            background: linear-gradient(135deg, #00ff88, #00ccff);
-            color: #000;
+        .btn-primary {
+            background: var(--accent);
+            color: white;
         }
 
-        .secondary {
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, .25);
-            color: #fff;
+            color: var(--accent);
+            border: 1.5px solid var(--border);
         }
 
-        /* ================= CAMERA ================= */
-        .video-box video {
+        .btn-secondary:hover {
+            background: rgba(0, 113, 227, 0.06);
+        }
+
+        /* CAMERA */
+        #cameraContainer {
+            margin-top: 20px;
+        }
+
+        .video-preview {
             width: 100%;
-            border-radius: 14px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .video-preview video {
+            width: 100%;
+            display: block;
             transform: scaleX(-1);
         }
 
-        /* ================= RESULT ================= */
-        .result-area {
-            min-height: 360px;
+        /* RESULT */
+        .result-container {
+            min-height: 400px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        #result img {
-            width: 100%;
-            border-radius: 14px;
-            margin-bottom: 1rem;
+        .placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 17px;
+            max-width: 400px;
+            margin: 0 auto;
         }
 
-        /* ================= SONGS ================= */
+        .result-content {
+            width: 100%;
+        }
+
+        .result-image {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow);
+        }
+
+        .emotion-display {
+            margin-bottom: 32px;
+        }
+
+        .emotion-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .emotion-value {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent), #5e5ce6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: capitalize;
+            margin-bottom: 12px;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(0, 113, 227, 0.1);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .description {
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-top: 16px;
+        }
+
+        /* MUSIC */
+        .music-section {
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
         .song-list {
-            margin-top: 1.25rem;
-            padding-top: .75rem;
-            border-top: 1px solid rgba(255, 255, 255, .1);
+            display: grid;
+            gap: 8px;
         }
 
         .song-item {
-            margin-top: .5rem;
-            font-size: .95rem;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .song-item:hover {
+            background: rgba(0, 113, 227, 0.06);
         }
 
         .song-item a {
-            color: #00ff88;
+            color: var(--text);
             text-decoration: none;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .song-item a:hover {
-            text-decoration: underline;
+            color: var(--accent);
         }
 
-        /* ================= UTIL ================= */
-        .hidden {
-            display: none;
-        }
-
-        /* ================= LOADER ================= */
+        /* LOADER */
         .loader {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, .9);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 999;
-            font-weight: 600;
         }
 
         .loader.active {
             display: flex;
         }
 
-        /* ================= BREAKPOINTS ================= */
+        .loader-content {
+            background: var(--card-bg);
+            padding: 40px 60px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
 
-        /* Tablets */
-        @media (min-width: 768px) {
-            .container {
-                padding: 2rem;
-            }
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(0, 113, 227, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
 
-            .logo {
-                font-size: 1.8rem;
-            }
+        .loader-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
 
-            .result-area {
-                min-height: 420px;
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
         }
 
-        /* Desktop */
-        @media (min-width: 1024px) {
-            .grid {
-                display: grid;
-                grid-template-columns: 420px 1fr;
-                gap: 2rem;
-            }
+        /* UTILITIES */
+        .hidden {
+            display: none !important;
+        }
 
-            .card,
-            .result-area {
-                padding: 2rem;
-                border-radius: 24px;
-            }
-
+        /* RESPONSIVE */
+        @media (max-width: 734px) {
             .logo {
-                font-size: 2rem;
+                font-size: 40px;
+            }
+
+            .tagline {
+                font-size: 17px;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+
+            .upload-area {
+                padding: 40px 24px;
+            }
+
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+
+            .emotion-value {
+                font-size: 40px;
+            }
+
+            .section-title {
+                font-size: 19px;
+            }
+
+            header {
+                padding: 24px 0 12px;
+            }
+
+            main {
+                margin-top: 32px;
+            }
+        }
+
+        /* ANIMATIONS */
+        .fade-in {
+            animation: fadeIn 0.6s ease;
+        }
+
+        .slide-up {
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
     </style>
 </head>
 
 <body>
-
-    <div class="loader" id="loader">Reading your expression…</div>
+    <!-- LOADER -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <div class="loader-text">Analyzing your expression</div>
+        </div>
+    </div>
 
     <div class="container">
+        <!-- HEADER -->
         <header>
-            <div class="logo">MOOD<span>.OS</span></div>
-            <div class="status" id="status">Ready</div>
+            <h1 class="logo">MOOD</h1>
+            <p class="tagline">Discover your emotions through AI</p>
+            <p class="status" id="status">Ready to analyze</p>
         </header>
 
-        <div class="grid">
-
-            <!-- INPUT -->
-            <div class="card">
-                <div class="upload-zone" id="uploadZone">
-                    <strong>Upload a photo</strong><br>
-                    Clear face · Good lighting
-                    <input type="file" id="fileInput" hidden>
+        <!-- MAIN -->
+        <main>
+            <!-- INPUT CARD -->
+            <div class="card fade-in">
+                <div class="upload-area" id="uploadZone">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-title">Upload a photo</div>
+                    <div class="upload-subtitle">or drag and drop</div>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
                 </div>
 
                 <div id="cameraContainer" class="hidden">
-                    <div class="video-box">
+                    <div class="video-preview">
                         <video id="webcamVideo" autoplay playsinline></video>
                     </div>
-                    <button class="btn primary" id="captureBtn">Capture Photo</button>
                 </div>
 
-                <button class="btn primary" id="startCam">Start Camera</button>
-                <button class="btn secondary" id="reset">Start over</button>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="startCam">Use Camera</button>
+                    <button class="btn btn-secondary" id="reset">Start Over</button>
+                </div>
+
+                <button class="btn btn-primary hidden" id="captureBtn" style="width:100%;margin-top:12px">Capture
+                    Photo</button>
             </div>
 
-            <!-- RESULT -->
-            <div class="result-area">
-                <div id="placeholder">
-                    Curious how you’re feeling right now?
-                </div>
+            <!-- RESULT CARD -->
+            <div class="card slide-up">
+                <div class="result-container">
+                    <div class="placeholder" id="placeholder">
+                        <p>Upload a photo or use your camera to discover<br>the emotions captured in your expression.
+                        </p>
+                    </div>
 
-                <div id="result" class="hidden">
-                    <img id="resultImage">
-                    <h2 id="emotion"></h2>
-                    <p id="description" style="color:#ccc;margin-top:.25rem"></p>
-                    <small id="confidence"></small>
-                    <div id="songs" class="song-list"></div>
+                    <div id="result" class="result-content hidden">
+                        <img id="resultImage" class="result-image" alt="Result">
+
+                        <div class="emotion-display">
+                            <div class="emotion-label">Detected Emotion</div>
+                            <div class="emotion-value" id="emotion">—</div>
+                            <span class="confidence-badge" id="confidence">—</span>
+                            <p class="description" id="description"></p>
+                        </div>
+
+                        <div class="music-section" id="musicSection" style="display:none">
+                            <h3 class="section-title">Music for your mood</h3>
+                            <div class="song-list" id="songList"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-        </div>
+        </main>
     </div>
 
     <script>
         const API = location.origin;
         let webcamStream = null;
 
-        const loader = document.getElementById("loader");
-        const status = document.getElementById("status");
-        const uploadZone = document.getElementById("uploadZone");
-        const fileInput = document.getElementById("fileInput");
-        const cameraContainer = document.getElementById("cameraContainer");
-        const webcamVideo = document.getElementById("webcamVideo");
-        const captureBtn = document.getElementById("captureBtn");
-        const startCamBtn = document.getElementById("startCam");
-        const placeholder = document.getElementById("placeholder");
-        const result = document.getElementById("result");
-        const resultImage = document.getElementById("resultImage");
-        const emotion = document.getElementById("emotion");
-        const description = document.getElementById("description");
-        const confidence = document.getElementById("confidence");
-        const songsBox = document.getElementById("songs");
+        const $ = id => document.getElementById(id);
+        const loader = $('loader');
+        const status = $('status');
+        const uploadZone = $('uploadZone');
+        const fileInput = $('fileInput');
+        const cameraContainer = $('cameraContainer');
+        const webcamVideo = $('webcamVideo');
+        const captureBtn = $('captureBtn');
+        const startCamBtn = $('startCam');
+        const placeholder = $('placeholder');
+        const result = $('result');
+        const resultImage = $('resultImage');
+        const emotion = $('emotion');
+        const description = $('description');
+        const confidence = $('confidence');
+        const musicSection = $('musicSection');
+        const songList = $('songList');
 
-        function setLoading(v) {
-            loader.classList.toggle("active", v);
-            status.textContent = v ? "Processing…" : "Ready";
-        }
+        const setLoading = v => {
+            loader.classList.toggle('active', v);
+            status.textContent = v ? 'Processing...' : 'Ready to analyze';
+        };
 
         uploadZone.onclick = () => fileInput.click();
 
-        fileInput.onchange = async () => {
-            if (!fileInput.files[0]) return;
-            setLoading(true);
-            placeholder.style.display = "none";
-            const fd = new FormData();
-            fd.append("file", fileInput.files[0]);
-            const res = await fetch(API + "/upload", { method: "POST", body: fd });
-            const data = await res.json();
-            setLoading(false);
-            showResult(data);
+        uploadZone.ondragover = e => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--accent)';
         };
 
-        startCamBtn.onclick = async () => {
-            if (webcamStream) { stopCamera(); return; }
+        uploadZone.ondragleave = () => {
+            uploadZone.style.borderColor = '';
+        };
+
+        uploadZone.ondrop = e => {
+            e.preventDefault();
+            uploadZone.style.borderColor = '';
+            if (e.dataTransfer.files[0]) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        };
+
+        fileInput.onchange = () => {
+            if (fileInput.files[0]) handleFile(fileInput.files[0]);
+        };
+
+        async function handleFile(file) {
+            setLoading(true);
+            const fd = new FormData();
+            fd.append('file', file);
             try {
-                webcamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                const res = await fetch(API + '/upload', { method: 'POST', body: fd });
+                const data = await res.json();
+                setLoading(false);
+                showResult(data);
+            } catch (err) {
+                setLoading(false);
+                alert('Error processing image');
+            }
+        }
+
+        startCamBtn.onclick = async () => {
+            if (webcamStream) {
+                stopCamera();
+                return;
+            }
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
                 webcamVideo.srcObject = webcamStream;
-                uploadZone.classList.add("hidden");
-                cameraContainer.classList.remove("hidden");
-                startCamBtn.textContent = "Stop Camera";
-                startCamBtn.classList.replace("primary", "secondary");
-            } catch { alert("Camera access denied"); }
+                uploadZone.classList.add('hidden');
+                cameraContainer.classList.remove('hidden');
+                captureBtn.classList.remove('hidden');
+                startCamBtn.textContent = 'Stop Camera';
+                startCamBtn.classList.replace('btn-primary', 'btn-secondary');
+            } catch {
+                alert('Camera access denied');
+            }
         };
 
         captureBtn.onclick = async () => {
-            const canvas = document.createElement("canvas");
+            const canvas = document.createElement('canvas');
             canvas.width = webcamVideo.videoWidth;
             canvas.height = webcamVideo.videoHeight;
-            const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext('2d');
             ctx.scale(-1, 1);
             ctx.drawImage(webcamVideo, -canvas.width, 0, canvas.width, canvas.height);
+
             setLoading(true);
-            const res = await fetch(API + "/webcam", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: canvas.toDataURL("image/jpeg", 0.95) }) });
-            const data = await res.json();
-            setLoading(false);
-            stopCamera();
-            showResult(data);
+            try {
+                const res = await fetch(API + '/webcam', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: canvas.toDataURL('image/jpeg', 0.95) })
+                });
+                const data = await res.json();
+                setLoading(false);
+                stopCamera();
+                showResult(data);
+            } catch {
+                setLoading(false);
+                alert('Error capturing photo');
+            }
         };
 
         function stopCamera() {
-            if (webcamStream) { webcamStream.getTracks().forEach(t => t.stop()); webcamStream = null; }
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(t => t.stop());
+                webcamStream = null;
+            }
             webcamVideo.srcObject = null;
-            cameraContainer.classList.add("hidden");
-            uploadZone.classList.remove("hidden");
-            startCamBtn.textContent = "Start Camera";
-            startCamBtn.classList.replace("secondary", "primary");
-        }
-
-        function ytLink(t, a) {
-            return `https://www.youtube.com/results?search_query=${encodeURIComponent(t + " " + a + " official audio")}`;
+            cameraContainer.classList.add('hidden');
+            uploadZone.classList.remove('hidden');
+            captureBtn.classList.add('hidden');
+            startCamBtn.textContent = 'Use Camera';
+            startCamBtn.classList.replace('btn-secondary', 'btn-primary');
         }
 
         function showResult(data) {
-            result.classList.remove("hidden");
+            placeholder.classList.add('hidden');
+            result.classList.remove('hidden');
+
             resultImage.src = data.image;
             emotion.textContent = data.insight.emotion;
             description.textContent = data.insight.description;
-            confidence.textContent = "Confidence: " + data.insight.confidence;
-            songsBox.innerHTML = "";
-            if (data.songs) {
+            confidence.textContent = data.insight.confidence.toUpperCase() + ' CONFIDENCE';
+
+            if (data.songs && data.songs.length) {
+                musicSection.style.display = 'block';
+                songList.innerHTML = '';
                 data.songs.forEach(s => {
-                    const d = document.createElement("div");
-                    d.className = "song-item";
-                    d.innerHTML = `🎵 <a href="${ytLink(s.title, s.artist)}" target="_blank">${s.title} — ${s.artist}</a>`;
-                    songsBox.appendChild(d);
+                    const div = document.createElement('div');
+                    div.className = 'song-item';
+                    div.innerHTML = `<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(s.title + ' ' + s.artist)}" target="_blank">
+                        <span>🎵</span> <span>${s.title} — ${s.artist}</span>
+                    </a>`;
+                    songList.appendChild(div);
                 });
             }
         }
 
-        document.getElementById("reset").onclick = () => location.reload();
+        $('reset').onclick = () => location.reload();
     </script>
-
 </body>
 
 </html>
