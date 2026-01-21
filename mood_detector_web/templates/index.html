@@ -11,136 +11,151 @@
         rel="stylesheet">
 
     <style>
+        /* ================= RESET ================= */
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box
+            box-sizing: border-box;
         }
 
         body {
             background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
             color: #fff;
             font-family: Inter, sans-serif;
+            min-height: 100vh;
         }
 
+        /* ================= LAYOUT ================= */
         .container {
             max-width: 1200px;
             margin: auto;
-            padding: 2rem
+            padding: 1.25rem;
         }
 
+        /* ================= HEADER ================= */
         header {
             display: flex;
             justify-content: space-between;
-            align-items: center
+            align-items: center;
         }
 
         .logo {
             font-family: Space Grotesk;
-            font-size: 2rem
+            font-size: 1.6rem;
         }
 
         .logo span {
             background: linear-gradient(135deg, #00ff88, #00ccff);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent
+            -webkit-text-fill-color: transparent;
         }
 
         .status {
-            font-size: .85rem;
-            color: #aaa
+            font-size: .8rem;
+            color: #aaa;
         }
 
+        /* ================= GRID (MOBILE FIRST) ================= */
         .grid {
-            display: grid;
-            grid-template-columns: 420px 1fr;
-            gap: 2rem;
-            margin-top: 2rem
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-top: 1.5rem;
         }
 
-        .card {
+        /* ================= CARDS ================= */
+        .card,
+        .result-area {
             background: rgba(255, 255, 255, .03);
             border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 24px;
-            padding: 2rem
+            border-radius: 20px;
+            padding: 1.5rem;
         }
 
+        /* ================= UPLOAD ================= */
         .upload-zone {
-            border: 2px dashed rgba(255, 255, 255, .2);
-            border-radius: 16px;
-            padding: 3rem 2rem;
+            border: 2px dashed rgba(255, 255, 255, .25);
+            border-radius: 14px;
+            padding: 2.5rem 1.5rem;
             text-align: center;
-            cursor: pointer
+            cursor: pointer;
         }
 
         .upload-zone:hover {
-            border-color: #00ff88
+            border-color: #00ff88;
         }
 
+        /* ================= BUTTONS ================= */
         .btn {
             width: 100%;
             padding: 1rem;
-            margin-top: 1rem;
+            margin-top: .75rem;
             border-radius: 12px;
             border: none;
             font-weight: 600;
-            cursor: pointer
+            font-size: .95rem;
+            cursor: pointer;
         }
 
         .primary {
             background: linear-gradient(135deg, #00ff88, #00ccff);
-            color: #000
+            color: #000;
         }
 
         .secondary {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, .2);
-            color: #fff
+            border: 1px solid rgba(255, 255, 255, .25);
+            color: #fff;
         }
 
-        .hidden {
-            display: none
-        }
-
-        .result-area {
-            background: rgba(255, 255, 255, .03);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 24px;
-            padding: 3rem;
-            min-height: 520px;
-            display: flex;
-            align-items: center;
-            justify-content: center
-        }
-
+        /* ================= CAMERA ================= */
         .video-box video {
             width: 100%;
-            border-radius: 16px;
-            transform: scaleX(-1)
+            border-radius: 14px;
+            transform: scaleX(-1);
         }
 
-        /* SONGS */
+        /* ================= RESULT ================= */
+        .result-area {
+            min-height: 360px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #result img {
+            width: 100%;
+            border-radius: 14px;
+            margin-bottom: 1rem;
+        }
+
+        /* ================= SONGS ================= */
         .song-list {
-            margin-top: 1.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, .1)
+            margin-top: 1.25rem;
+            padding-top: .75rem;
+            border-top: 1px solid rgba(255, 255, 255, .1);
         }
 
         .song-item {
-            margin-top: .6rem;
+            margin-top: .5rem;
+            font-size: .95rem;
         }
 
         .song-item a {
             color: #00ff88;
             text-decoration: none;
-            font-weight: 500;
         }
 
         .song-item a:hover {
             text-decoration: underline;
         }
 
-        /* LOADER */
+        /* ================= UTIL ================= */
+        .hidden {
+            display: none;
+        }
+
+        /* ================= LOADER ================= */
         .loader {
             position: fixed;
             inset: 0;
@@ -149,11 +164,47 @@
             align-items: center;
             justify-content: center;
             z-index: 999;
-            font-weight: 600
+            font-weight: 600;
         }
 
         .loader.active {
-            display: flex
+            display: flex;
+        }
+
+        /* ================= BREAKPOINTS ================= */
+
+        /* Tablets */
+        @media (min-width: 768px) {
+            .container {
+                padding: 2rem;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .result-area {
+                min-height: 420px;
+            }
+        }
+
+        /* Desktop */
+        @media (min-width: 1024px) {
+            .grid {
+                display: grid;
+                grid-template-columns: 420px 1fr;
+                gap: 2rem;
+            }
+
+            .card,
+            .result-area {
+                padding: 2rem;
+                border-radius: 24px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
@@ -170,7 +221,7 @@
 
         <div class="grid">
 
-            <!-- LEFT -->
+            <!-- INPUT -->
             <div class="card">
                 <div class="upload-zone" id="uploadZone">
                     <strong>Upload a photo</strong><br>
@@ -189,18 +240,17 @@
                 <button class="btn secondary" id="reset">Start over</button>
             </div>
 
-            <!-- RIGHT -->
+            <!-- RESULT -->
             <div class="result-area">
                 <div id="placeholder">
                     Curious how you’re feeling right now?
                 </div>
 
                 <div id="result" class="hidden">
-                    <img id="resultImage" style="max-width:100%;border-radius:16px">
-                    <h2 id="emotion" style="margin-top:1rem"></h2>
-                    <p id="description" style="margin-top:.5rem;color:#ccc"></p>
+                    <img id="resultImage">
+                    <h2 id="emotion"></h2>
+                    <p id="description" style="color:#ccc;margin-top:.25rem"></p>
                     <small id="confidence"></small>
-
                     <div id="songs" class="song-list"></div>
                 </div>
             </div>
@@ -239,36 +289,24 @@
             if (!fileInput.files[0]) return;
             setLoading(true);
             placeholder.style.display = "none";
-
             const fd = new FormData();
             fd.append("file", fileInput.files[0]);
             const res = await fetch(API + "/upload", { method: "POST", body: fd });
             const data = await res.json();
-
             setLoading(false);
             showResult(data);
         };
 
         startCamBtn.onclick = async () => {
-            if (webcamStream) {
-                stopCamera();
-                return;
-            }
-
+            if (webcamStream) { stopCamera(); return; }
             try {
-                webcamStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user" }, audio: false
-                });
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 webcamVideo.srcObject = webcamStream;
                 uploadZone.classList.add("hidden");
                 cameraContainer.classList.remove("hidden");
-
                 startCamBtn.textContent = "Stop Camera";
-                startCamBtn.classList.remove("primary");
-                startCamBtn.classList.add("secondary");
-            } catch {
-                alert("Camera access denied");
-            }
+                startCamBtn.classList.replace("primary", "secondary");
+            } catch { alert("Camera access denied"); }
         };
 
         captureBtn.onclick = async () => {
@@ -278,13 +316,8 @@
             const ctx = canvas.getContext("2d");
             ctx.scale(-1, 1);
             ctx.drawImage(webcamVideo, -canvas.width, 0, canvas.width, canvas.height);
-
             setLoading(true);
-            const res = await fetch(API + "/webcam", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image: canvas.toDataURL("image/jpeg", 0.95) })
-            });
+            const res = await fetch(API + "/webcam", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: canvas.toDataURL("image/jpeg", 0.95) }) });
             const data = await res.json();
             setLoading(false);
             stopCamera();
@@ -292,21 +325,16 @@
         };
 
         function stopCamera() {
-            if (webcamStream) {
-                webcamStream.getTracks().forEach(t => t.stop());
-                webcamStream = null;
-            }
+            if (webcamStream) { webcamStream.getTracks().forEach(t => t.stop()); webcamStream = null; }
             webcamVideo.srcObject = null;
             cameraContainer.classList.add("hidden");
             uploadZone.classList.remove("hidden");
             startCamBtn.textContent = "Start Camera";
-            startCamBtn.classList.add("primary");
-            startCamBtn.classList.remove("secondary");
+            startCamBtn.classList.replace("secondary", "primary");
         }
 
-        function ytLink(title, artist) {
-            const q = encodeURIComponent(`${title} ${artist} official audio`);
-            return `https://www.youtube.com/results?search_query=${q}`;
+        function ytLink(t, a) {
+            return `https://www.youtube.com/results?search_query=${encodeURIComponent(t + " " + a + " official audio")}`;
         }
 
         function showResult(data) {
@@ -315,22 +343,13 @@
             emotion.textContent = data.insight.emotion;
             description.textContent = data.insight.description;
             confidence.textContent = "Confidence: " + data.insight.confidence;
-
             songsBox.innerHTML = "";
-
-            if (data.songs && data.songs.length) {
-                const title = document.createElement("div");
-                title.style.fontWeight = "600";
-                title.textContent = "Music for your mood";
-                songsBox.appendChild(title);
-
+            if (data.songs) {
                 data.songs.forEach(s => {
-                    const div = document.createElement("div");
-                    div.className = "song-item";
-                    div.innerHTML = `🎵 <a href="${ytLink(s.title, s.artist)}" target="_blank" rel="noopener">
-        ${s.title} — ${s.artist}
-      </a>`;
-                    songsBox.appendChild(div);
+                    const d = document.createElement("div");
+                    d.className = "song-item";
+                    d.innerHTML = `🎵 <a href="${ytLink(s.title, s.artist)}" target="_blank">${s.title} — ${s.artist}</a>`;
+                    songsBox.appendChild(d);
                 });
             }
         }
