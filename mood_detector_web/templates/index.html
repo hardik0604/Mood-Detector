@@ -3,912 +3,341 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="AI-powered facial emotion detection and sentiment analysis using FER+ deep learning model. Analyze emotions in real-time or upload images.">
-    <meta name="keywords" content="emotion detection, sentiment analysis, facial recognition, AI, machine learning">
-    <title>MOOD.OS - AI Emotion Detection & Sentiment Analysis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MOOD.OS</title>
 
-    <!-- Preconnect to CDNs for faster resource loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-
-    <!-- Fonts - preload critical font -->
-    <link rel="preload"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
-        as="style">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&display=swap"
         rel="stylesheet">
 
-    <!-- Icons - defer non-critical CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" media="print"
-        onload="this.media='all'">
-    <noscript>
-        <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    </noscript>
-
     <style>
-        :root {
-            --bg: #080808;
-            --surface: #121212;
-            --surface-hover: #1a1a1a;
-            --border: #333333;
-            --accent: #CCFF00;
-            /* Acid Green/Yellow */
-            --accent-dim: rgba(204, 255, 0, 0.1);
-            --text: #ffffff;
-            --text-muted: #999999;
-            /* Improved contrast from #666666 for accessibility */
-
-            --font-ui: 'Inter', system-ui, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
-
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            box-sizing: border-box
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: var(--font-ui);
-            line-height: 1.5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+            color: #fff;
+            font-family: Inter, sans-serif;
         }
 
-        /* Brutalist / Technical Layout */
-        .layout {
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-            padding: 2rem;
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 2rem
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .logo {
+            font-family: Space Grotesk;
+            font-size: 2rem
+        }
+
+        .logo span {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .status {
+            font-size: .85rem;
+            color: #aaa
+        }
+
+        .grid {
             display: grid;
-            grid-template-columns: 350px 1fr;
+            grid-template-columns: 420px 1fr;
             gap: 2rem;
-            height: 100vh;
+            margin-top: 2rem
         }
 
-        @media (max-width: 900px) {
-            .layout {
-                grid-template-columns: 1fr;
-                height: auto;
-                padding: 1rem;
-            }
+        .card {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 24px;
+            padding: 2rem
         }
 
-        /* Typography */
-        h1,
-        h2,
-        h3 {
-            font-weight: 400;
-            letter-spacing: -0.02em;
-        }
-
-        .mono-label {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        /* Sidebar / Controls */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            border-right: 1px solid var(--border);
-            padding-right: 2rem;
-        }
-
-        @media (max-width: 900px) {
-            .sidebar {
-                border-right: none;
-                border-bottom: 1px solid var(--border);
-                padding-right: 0;
-                padding-bottom: 2rem;
-            }
-        }
-
-        .brand {
-            font-size: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1rem;
-        }
-
-        .brand span {
-            color: var(--accent);
-        }
-
-        /* Upload Zone - Technical Look */
         .upload-zone {
-            border: 1px dashed var(--border);
-            background: var(--surface);
-            padding: 2rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
+            border: 2px dashed rgba(255, 255, 255, .2);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer
         }
 
-        .upload-zone:hover,
-        .upload-zone.dragover {
-            border-color: var(--accent);
-            background: var(--accent-dim);
-        }
-
-        .upload-zone-content {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
+        .upload-zone:hover {
+            border-color: #00ff88
         }
 
         .btn {
-            background: var(--text);
-            color: var(--bg);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-weight: 600;
             width: 100%;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(204, 255, 0, 0.3);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn:focus {
-            outline: 2px solid var(--accent);
-            outline-offset: 2px;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--text);
-        }
-
-        .btn-accent {
-            background: var(--accent);
-            color: #000;
-        }
-
-        /* Main Viewport */
-        .viewport {
-            position: relative;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .viewport-header {
-            border-bottom: 1px solid var(--border);
             padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg);
+            margin-top: 1rem;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer
         }
 
-        .viewport-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: auto;
-            min-height: 400px;
-            background: repeating-linear-gradient(45deg,
-                    #0f0f0f,
-                    #0f0f0f 10px,
-                    #121212 10px,
-                    #121212 20px);
+        .primary {
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            color: #000
         }
 
-        #processedImage,
-        #webcam {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-            transition: opacity 0.3s ease;
+        .secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, .2);
+            color: #fff
         }
 
-        #processedImage:focus {
-            outline: 2px solid var(--accent);
-            outline-offset: 4px;
-        }
-
-        #webcam {
-            transform: scaleX(-1);
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .scan-feed img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
-            /* Default to block, rely on .hidden class to toggle */
-        }
-
-        .scan-feed img.hidden {
-            display: none !important;
-        }
-
-        /* Analysis Overlay / Panel */
-        .analysis-panel {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(8, 8, 8, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border);
-            padding: 1.5rem;
-            display: flex;
-            gap: 2rem;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .analysis-panel.active {
-            transform: translateY(0);
-        }
-
-        @media (max-width: 768px) {
-            .analysis-panel {
-                flex-direction: column;
-                height: 100%;
-                /* Full screen on mobile */
-                top: 0;
-                overflow-y: auto;
-            }
-        }
-
-        /* Data Visualization */
-        .stat-group {
-            flex: 0 0 200px;
-        }
-
-        .dominant-value {
-            font-size: 3rem;
-            font-family: var(--font-mono);
-            line-height: 1;
-            color: var(--accent);
-            text-transform: uppercase;
-        }
-
-        .chart-container {
-            flex: 1;
-            height: 150px;
-        }
-
-        /* Webcam Container */
-        .webcam-wrapper {
-            width: 100%;
-            height: 100%;
-            display: none;
-        }
-
-        /* Utility */
         .hidden {
-            display: none !important;
+            display: none
         }
 
-        /* Accessibility - Screen Reader Only */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-
-        /* Focus visible for keyboard navigation */
-        *:focus-visible {
-            outline: 2px solid var(--accent);
-            outline-offset: 2px;
-        }
-
-        /* Smooth transitions for state changes */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--text-muted);
-            border-radius: 50%;
-        }
-
-        .status-dot.active {
-            background: var(--accent);
-            box-shadow: 0 0 10px var(--accent-dim);
-        }
-
-        /* Loader */
-        .loader-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
+        .result-area {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 24px;
+            padding: 3rem;
+            min-height: 520px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            z-index: 10;
+            justify-content: center
         }
 
-        .scan-line {
+        .video-box video {
             width: 100%;
-            height: 2px;
-            background: var(--accent);
-            position: absolute;
-            top: 0;
-            animation: scan 2s linear infinite;
+            border-radius: 16px;
+            transform: scaleX(-1)
         }
 
-        @keyframes scan {
-            0% {
-                top: 0;
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            90% {
-                opacity: 1;
-            }
-
-            100% {
-                top: 100%;
-                opacity: 0;
-            }
-        }
-
-        /* Placeholder */
-        .placeholder {
-            text-align: center;
-            color: var(--text-muted);
-        }
-
-        .placeholder i {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            display: block;
-            opacity: 0.5;
-        }
-
-        /* Song Recommendations */
-        .song-recommendations {
-            flex: 1;
-            min-width: 300px;
+        /* SONGS */
+        .song-list {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, .1)
         }
 
         .song-item {
-            background: var(--surface-hover);
-            border: 1px solid var(--border);
-            padding: 0.75rem;
-            display: flex;
-            justify-content: space-between;
+            margin-top: .6rem;
+        }
+
+        .song-item a {
+            color: #00ff88;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .song-item a:hover {
+            text-decoration: underline;
+        }
+
+        /* LOADER */
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .9);
+            display: none;
             align-items: center;
-            transition: all 0.2s;
+            justify-content: center;
+            z-index: 999;
+            font-weight: 600
         }
 
-        .song-item:hover {
-            border-color: var(--accent);
-            transform: translateX(4px);
-        }
-
-        .song-info {
-            flex: 1;
-        }
-
-        .song-title {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--text);
-        }
-
-        .song-artist {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 0.2rem;
-        }
-
-        .song-genre {
-            font-size: 0.75rem;
-            font-family: var(--font-mono);
-            color: var(--accent);
-            text-transform: uppercase;
-            padding: 0.2rem 0.5rem;
-            background: var(--accent-dim);
-            border-radius: 2px;
+        .loader.active {
+            display: flex
         }
     </style>
 </head>
 
 <body>
-    <div class="layout">
-        <!-- Sidebar Controls -->
-        <aside class="sidebar">
-            <div class="brand">
-                MOOD<span>.OS</span>
-            </div>
 
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 2rem;">
-                <div>
-                    <span class="mono-label">Input Source</span>
+    <div class="loader" id="loader">Reading your expression…</div>
 
-                    <div class="upload-zone" id="uploadArea" role="button" tabindex="0"
-                        aria-label="Upload image for emotion detection. Click or drop an image here.">
-                        <input type="file" id="fileInput" accept="image/*" hidden aria-label="Image file input">
-                        <div class="upload-zone-content">
-                            <i class="ri-file-add-line" style="font-size: 1.5rem;" aria-hidden="true"></i>
-                            <div>
-                                <div style="font-weight: 500;">Drop Image Here</div>
-                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">or click to
-                                    browse</div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="container">
+        <header>
+            <div class="logo">MOOD<span>.OS</span></div>
+            <div class="status" id="status">Ready</div>
+        </header>
 
-                    <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
-                        <div style="height: 1px; background: var(--border); flex: 1;"></div>
-                        <span
-                            style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">OR</span>
-                        <div style="height: 1px; background: var(--border); flex: 1;"></div>
-                    </div>
+        <div class="grid">
 
-                    <button class="btn btn-outline" id="startWebcam"
-                        aria-label="Activate camera for real-time emotion detection">
-                        <i class="ri-camera-line" aria-hidden="true"></i> ACTIVATE CAMERA
-                    </button>
-
-                    <div id="webcamControls" class="hidden" style="margin-top: 1rem; display: flex; gap: 0.5rem;"
-                        role="group" aria-label="Webcam controls">
-                        <button class="btn btn-accent" id="capture"
-                            aria-label="Capture current frame for analysis">CAPTURE</button>
-                        <button class="btn btn-outline" id="stopWebcam" style="width: auto;" aria-label="Stop camera"><i
-                                class="ri-close-line" aria-hidden="true"></i></button>
-                    </div>
+            <!-- LEFT -->
+            <div class="card">
+                <div class="upload-zone" id="uploadZone">
+                    <strong>Upload a photo</strong><br>
+                    Clear face · Good lighting
+                    <input type="file" id="fileInput" hidden>
                 </div>
 
-                <div>
-                    <span class="mono-label">System Log</span>
-                    <div id="error" class="hidden"
-                        style="color: #ff3333; font-family: var(--font-mono); font-size: 0.85rem; margin-top: 0.5rem;">
+                <div id="cameraContainer" class="hidden">
+                    <div class="video-box">
+                        <video id="webcamVideo" autoplay playsinline></video>
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
-                        v.1.0.2 Stable<br>
-                        ONNX Runtime Ready
-                    </div>
+                    <button class="btn primary" id="captureBtn">Capture Photo</button>
+                </div>
+
+                <button class="btn primary" id="startCam">Start Camera</button>
+                <button class="btn secondary" id="reset">Start over</button>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="result-area">
+                <div id="placeholder">
+                    Curious how you’re feeling right now?
+                </div>
+
+                <div id="result" class="hidden">
+                    <img id="resultImage" style="max-width:100%;border-radius:16px">
+                    <h2 id="emotion" style="margin-top:1rem"></h2>
+                    <p id="description" style="margin-top:.5rem;color:#ccc"></p>
+                    <small id="confidence"></small>
+
+                    <div id="songs" class="song-list"></div>
                 </div>
             </div>
 
-            <button class="btn btn-outline" id="resetBtn" onclick="resetApp()" style="margin-top: auto;"
-                aria-label="Reset application to initial state">
-                <i class="ri-refresh-line" aria-hidden="true"></i> RESET SYSTEM
-            </button>
-        </aside>
-
-        <!-- Main Viewport -->
-        <main class="viewport" role="main" aria-label="Main content area">
-            <div class="viewport-header">
-                <div class="status-badge" role="status" aria-live="polite">
-                    <div class="status-dot" id="statusDot" aria-hidden="true"></div>
-                    <span id="statusText">IDLE</span>
-                </div>
-                <div class="mono-label" style="margin: 0;">VIEWPORT_01</div>
-            </div>
-
-            <div class="viewport-content">
-                <!-- States -->
-                <div id="emptyState" class="placeholder">
-                    <i class="ri-focus-3-line"></i>
-                    AWAITING INPUT
-                </div>
-
-                <!-- Loader -->
-                <div id="loader" class="loader-overlay hidden">
-                    <div class="scan-line"></div>
-                    <div
-                        style="background: var(--bg); padding: 0.5rem 1rem; border: 1px solid var(--accent); color: var(--accent); font-family: var(--font-mono);">
-                        ANALYZING...
-                    </div>
-                </div>
-
-                <!-- Content -->
-                <img id="processedImage" src="" alt="Processed image with emotion detection" class="hidden"
-                    tabindex="0">
-
-                <div id="webcamContainer" class="webcam-wrapper">
-                    <video id="webcam" autoplay playsinline></video>
-                </div>
-            </div>
-
-            <!-- Bottom Panel -->
-            <div class="analysis-panel" id="results" role="region" aria-label="Emotion analysis results"
-                aria-live="polite">
-                <div class="stat-group">
-                    <span class="mono-label">Dominant Affect</span>
-                    <div class="dominant-value" id="dominantEmotion" aria-label="Detected emotion">--</div>
-                    <div style="margin-top: 0.5rem; color: var(--text-muted);" aria-label="Confidence level">Confidence:
-                        <span id="confidenceVal">0%</span>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="emotionChart" role="img" aria-label="Emotion confidence distribution chart"></canvas>
-                </div>
-
-                <div class="song-recommendations" id="songRecommendations" style="display: none;">
-                    <span class="mono-label">Music Recommendations</span>
-                    <div id="moodDescription" style="margin: 0.5rem 0; font-size: 0.9rem; color: var(--text);"></div>
-                    <div id="songList" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem;">
-                    </div>
-                </div>
-            </div>
-        </main>
+        </div>
     </div>
 
-    <!-- Charts - Required for emotion visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script>
-        // --- Technical Theme JS ---
-
+        const API = location.origin;
         let webcamStream = null;
-        let chartInstance = null;
-        const els = {
-            uploadArea: document.getElementById('uploadArea'),
-            fileInput: document.getElementById('fileInput'),
-            loader: document.getElementById('loader'),
-            results: document.getElementById('results'),
-            emptyState: document.getElementById('emptyState'),
-            processedImage: document.getElementById('processedImage'),
-            webcamContainer: document.getElementById('webcamContainer'),
-            webcamVideo: document.getElementById('webcam'),
-            startWebcamBtn: document.getElementById('startWebcam'),
-            webcamControls: document.getElementById('webcamControls'),
-            errorDiv: document.getElementById('error'),
-            statusText: document.getElementById('statusText'),
-            statusDot: document.getElementById('statusDot')
+
+        const loader = document.getElementById("loader");
+        const status = document.getElementById("status");
+        const uploadZone = document.getElementById("uploadZone");
+        const fileInput = document.getElementById("fileInput");
+        const cameraContainer = document.getElementById("cameraContainer");
+        const webcamVideo = document.getElementById("webcamVideo");
+        const captureBtn = document.getElementById("captureBtn");
+        const startCamBtn = document.getElementById("startCam");
+        const placeholder = document.getElementById("placeholder");
+        const result = document.getElementById("result");
+        const resultImage = document.getElementById("resultImage");
+        const emotion = document.getElementById("emotion");
+        const description = document.getElementById("description");
+        const confidence = document.getElementById("confidence");
+        const songsBox = document.getElementById("songs");
+
+        function setLoading(v) {
+            loader.classList.toggle("active", v);
+            status.textContent = v ? "Processing…" : "Ready";
+        }
+
+        uploadZone.onclick = () => fileInput.click();
+
+        fileInput.onchange = async () => {
+            if (!fileInput.files[0]) return;
+            setLoading(true);
+            placeholder.style.display = "none";
+
+            const fd = new FormData();
+            fd.append("file", fileInput.files[0]);
+            const res = await fetch(API + "/upload", { method: "POST", body: fd });
+            const data = await res.json();
+
+            setLoading(false);
+            showResult(data);
         };
 
-        // Initialize Chart Defaults
-        Chart.defaults.color = '#666';
-        Chart.defaults.font.family = '"JetBrains Mono", monospace';
-        Chart.defaults.font.size = 11;
-
-        // Drag & Drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            els.uploadArea.addEventListener(eventName, e => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
-
-        els.uploadArea.addEventListener('dragenter', () => els.uploadArea.classList.add('dragover'));
-        els.uploadArea.addEventListener('dragleave', () => els.uploadArea.classList.remove('dragover'));
-        els.uploadArea.addEventListener('drop', (e) => {
-            els.uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length) handleFile(files[0]);
-        });
-
-        // Click and keyboard support for upload
-        els.uploadArea.addEventListener('click', () => els.fileInput.click());
-        els.uploadArea.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                els.fileInput.click();
+        startCamBtn.onclick = async () => {
+            if (webcamStream) {
+                stopCamera();
+                return;
             }
-        });
 
-        els.fileInput.addEventListener('change', () => {
-            if (els.fileInput.files.length) handleFile(els.fileInput.files[0]);
-        });
-
-        // Webcam
-        els.startWebcamBtn.addEventListener('click', async () => {
             try {
-                resetUI();
-                setStatus('CAMERA_ACTIVE', true);
-
                 webcamStream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 1280, height: 720 }
+                    video: { facingMode: "user" }, audio: false
                 });
+                webcamVideo.srcObject = webcamStream;
+                uploadZone.classList.add("hidden");
+                cameraContainer.classList.remove("hidden");
 
-                els.webcamVideo.srcObject = webcamStream;
-                els.webcamContainer.style.display = 'block';
-                els.emptyState.classList.add('hidden');
-
-                els.startWebcamBtn.classList.add('hidden');
-                els.webcamControls.classList.remove('hidden');
-                els.webcamControls.style.display = 'flex';
-
-            } catch (err) {
-                showError('CAMERA_ACCESS_DENIED');
+                startCamBtn.textContent = "Stop Camera";
+                startCamBtn.classList.remove("primary");
+                startCamBtn.classList.add("secondary");
+            } catch {
+                alert("Camera access denied");
             }
-        });
+        };
 
-        document.getElementById('stopWebcam').addEventListener('click', stopWebcam);
+        captureBtn.onclick = async () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = webcamVideo.videoWidth;
+            canvas.height = webcamVideo.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.scale(-1, 1);
+            ctx.drawImage(webcamVideo, -canvas.width, 0, canvas.width, canvas.height);
 
-        document.getElementById('capture').addEventListener('click', () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = els.webcamVideo.videoWidth;
-            canvas.height = els.webcamVideo.videoHeight;
-            canvas.getContext('2d').drawImage(els.webcamVideo, 0, 0);
+            setLoading(true);
+            const res = await fetch(API + "/webcam", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: canvas.toDataURL("image/jpeg", 0.95) })
+            });
+            const data = await res.json();
+            setLoading(false);
+            stopCamera();
+            showResult(data);
+        };
 
-            const imageData = canvas.toDataURL('image/jpeg');
-            stopWebcam();
-
-            processRequest('/webcam', { image: imageData });
-        });
-
-        function stopWebcam() {
+        function stopCamera() {
             if (webcamStream) {
                 webcamStream.getTracks().forEach(t => t.stop());
                 webcamStream = null;
             }
-            els.webcamContainer.style.display = 'none';
-            els.startWebcamBtn.classList.remove('hidden');
-            els.webcamControls.classList.add('hidden');
-            setStatus('IDLE', false);
+            webcamVideo.srcObject = null;
+            cameraContainer.classList.add("hidden");
+            uploadZone.classList.remove("hidden");
+            startCamBtn.textContent = "Start Camera";
+            startCamBtn.classList.add("primary");
+            startCamBtn.classList.remove("secondary");
         }
 
-        async function handleFile(file) {
-            resetUI();
-            const formData = new FormData();
-            formData.append('file', file);
-            processRequest('/upload', formData, false); // false = not JSON
+        function ytLink(title, artist) {
+            const q = encodeURIComponent(`${title} ${artist} official audio`);
+            return `https://www.youtube.com/results?search_query=${q}`;
         }
 
-        async function processRequest(url, body, isJson = true) {
-            setLoading(true);
-            try {
-                const opts = { method: 'POST' };
-                if (isJson) {
-                    opts.headers = { 'Content-Type': 'application/json' };
-                    opts.body = JSON.stringify(body);
-                } else {
-                    opts.body = body;
-                }
+        function showResult(data) {
+            result.classList.remove("hidden");
+            resultImage.src = data.image;
+            emotion.textContent = data.insight.emotion;
+            description.textContent = data.insight.description;
+            confidence.textContent = "Confidence: " + data.insight.confidence;
 
-                const res = await fetch(url, opts);
-                const data = await res.json();
+            songsBox.innerHTML = "";
 
-                if (data.success) {
-                    showResults(data);
-                } else {
-                    throw new Error(data.error);
-                }
-            } catch (err) {
-                showError(err.message || 'SYSTEM_ERROR');
-            } finally {
-                setLoading(false);
-                // setLoading(false); // Moved to image onload
-            }
-        }
+            if (data.songs && data.songs.length) {
+                const title = document.createElement("div");
+                title.style.fontWeight = "600";
+                title.textContent = "Music for your mood";
+                songsBox.appendChild(title);
 
-        function showResults(data) {
-            // Display Image with fade-in
-            els.processedImage.src = data.processed_image + '?t=' + Date.now();
-            els.emptyState.classList.add('hidden');
-
-            els.processedImage.onload = () => {
-                setLoading(false);
-                els.processedImage.classList.remove('hidden');
-                els.processedImage.classList.add('fade-in');
-                els.processedImage.style.display = 'block';
-                els.results.classList.add('active');
-
-                // Focus on results for accessibility
-                setTimeout(() => {
-                    els.results.focus();
-                }, 300);
-            };
-
-            if (els.processedImage.complete && els.processedImage.naturalHeight !== 0) {
-                els.processedImage.onload();
-            }
-
-            if (data.emotions && data.emotions.length) {
-                const emotions = data.emotions[0].emotions;
-                const sorted = Object.entries(emotions)
-                    .sort(([, a], [, b]) => b - a);
-
-                const dominant = sorted[0];
-                document.getElementById('dominantEmotion').innerText = dominant[0];
-                document.getElementById('confidenceVal').innerText = (dominant[1] * 100).toFixed(1) + '%';
-
-                // Colorize dominant text based on sentiment (approx)
-                // We use CSS class or inline for simplicity with the Acid theme
-                const val = document.getElementById('dominantEmotion');
-                val.style.color = 'var(--accent)';
-
-                updateChart(sorted);
-            }
-
-            // Display song recommendations
-            if (data.recommended_songs && data.recommended_songs.length > 0) {
-                const songRecs = document.getElementById('songRecommendations');
-                const moodDesc = document.getElementById('moodDescription');
-                const songList = document.getElementById('songList');
-
-                moodDesc.textContent = data.mood_description || '';
-
-                songList.innerHTML = '';
-                data.recommended_songs.forEach(song => {
-                    const songItem = document.createElement('div');
-                    songItem.className = 'song-item';
-                    songItem.innerHTML = `
-                        <div class="song-info">
-                            <div class="song-title">${song.title}</div>
-                            <div class="song-artist">${song.artist}</div>
-                        </div>
-                        <div class="song-genre">${song.genre}</div>
-                    `;
-                    songList.appendChild(songItem);
+                data.songs.forEach(s => {
+                    const div = document.createElement("div");
+                    div.className = "song-item";
+                    div.innerHTML = `🎵 <a href="${ytLink(s.title, s.artist)}" target="_blank" rel="noopener">
+        ${s.title} — ${s.artist}
+      </a>`;
+                    songsBox.appendChild(div);
                 });
-
-                songRecs.style.display = 'block';
             }
         }
 
-        function updateChart(sortedData) {
-            const ctx = document.getElementById('emotionChart').getContext('2d');
-
-            if (chartInstance) chartInstance.destroy();
-
-            // Limit to top 5 for cleaner UI
-            const top5 = sortedData.slice(0, 5);
-
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: top5.map(x => x[0].toUpperCase()),
-                    datasets: [{
-                        data: top5.map(x => x[1]),
-                        backgroundColor: '#CCFF00',
-                        barThickness: 4,
-                        borderRadius: 2
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: {
-                            display: false,
-                            max: 1
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: {
-                                color: '#fff',
-                                font: { family: '"JetBrains Mono", monospace' }
-                            }
-                        }
-                    },
-                    animation: { duration: 0 } // Instant tech feel
-                }
-            });
-        }
-
-        // Helpers
-        function setLoading(bool) {
-            if (bool) {
-                els.loader.classList.remove('hidden');
-                setStatus('PROCESSING...', true);
-            } else {
-                els.loader.classList.add('hidden');
-            }
-        }
-
-        function setStatus(text, active) {
-            els.statusText.innerText = text;
-            if (active) els.statusDot.classList.add('active');
-            else els.statusDot.classList.remove('active');
-        }
-
-        function showError(msg) {
-            els.errorDiv.innerText = `ERR: ${msg}`;
-            els.errorDiv.classList.remove('hidden');
-            els.errorDiv.classList.add('fade-in');
-            els.errorDiv.setAttribute('role', 'alert');
-            setStatus('ERROR', false);
-
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                els.errorDiv.classList.add('hidden');
-            }, 5000);
-        }
-
-        function resetUI() {
-            els.processedImage.classList.add('hidden');
-            els.processedImage.classList.remove('fade-in');
-            els.results.classList.remove('active');
-            els.errorDiv.classList.add('hidden');
-            els.emptyState.classList.remove('hidden');
-            els.emptyState.classList.add('fade-in');
-            if (chartInstance) chartInstance.destroy();
-            stopWebcam();
-
-            // Hide song recommendations
-            document.getElementById('songRecommendations').style.display = 'none';
-
-            // Reset file input
-            els.fileInput.value = '';
-        }
-
-        // Expose global for button
-        window.resetApp = resetUI;
-
+        document.getElementById("reset").onclick = () => location.reload();
     </script>
+
 </body>
 
 </html>
